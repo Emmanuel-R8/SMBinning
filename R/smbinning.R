@@ -33,33 +33,123 @@ smbinning = function(df, y, x, p = 0.05) {
   require(tidyverse)
 
   # Check data frame and formats
-  assert_that(is.data.frame(df), msg = "Data not a data.frame")
-  assert_that(is.string(x),      msg = "x must be a string.")
-  assert_that(is.string(y),      msg = "y must be a string.")
+  tryCatch({
+    assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a data.frame")
+    return(NA)
+  })
 
-  assert_that(str_detect(x), "\\." == FALSE, "x cannot contain a dot.")
-  assert_that(str_detect(y), "\\." == FALSE, "y cannot contain a dot.")
+  tryCatch({
+    assert_that(is.string(x))
+  },
+  error = function(e) {
+    message("x must be a string.")
+    return(NA)
+  })
 
+  tryCatch({
+    assert_that(is.string(y))
+  },
+  error = function(e) {
+    message("y must be a string.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(str_detect(x, "\\.") == FALSE)
+  },   error = function(e) {
+    message("x cannot contain a dot.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(str_detect(y, "\\.") == FALSE)
+  },
+  error = function(e) {
+    message("y cannot contain a dot.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(tolower(y) != "default")
+  },
+  error = function(e) {
+    message("Field y cannot be named 'default'.")
+    return(NA)
+  })
 
   i = which(names(df) == y) # Find Column for dependant
+  tryCatch({
+    assert_that(i != 0)
+  },
+  error = function(e) {
+    message("Cannot find field y.")
+    return(NA)
+  })
+
   j = which(names(df) == x) # Find Column for independant
-  if (!is.numeric(df[, i])) {
-    return("Target (y) not found or it is not numeric")
-  } else if (max(df[, i], na.rm = T) != 1) {
-    return("Maximum not 1")
-  } else if (tolower(y) == "default") {
-    return("Field name 'default' not allowed")
-  } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'") >
-             0) {
+  tryCatch({
+    assert_that(j != 0)
+  },
+  error = function(e) {
+    message("Cannot find field x.")
+    return(NA)
+  })
+
+
+  tryCatch({
+    assert_that(is.numeric(df[, i]))
+  },
+  error = function(e) {
+    message("Field y must be numeric.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(is.numeric(df[, j]))
+  },   error = function(e) {
+    message("Field x must be numeric.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(max(df[, i], na.rm = TRUE) == 1)
+  },
+  error = function(e) {
+    message("Maximum of y must be 1.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(min(df[, i], na.rm = TRUE) == 0)
+  },
+  error = function(e) {
+    message("Minimum of y must be 0.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(length(unique(df[, j])) >= 5)
+  },
+  error = function(e) {
+    message("x must have at least 5 uniques values.")
+    return(NA)
+  })
+
+  tryCatch({
+    assert_that(between(p, 0.0, 0.5))
+  },
+  error = function(e) {
+    message("p must be greater than 0 and lower than 0.5 (50%).")
+    return(NA)
+  })
+
+
+  if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'") >
+      0) {
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
-  } else if (min(df[, i], na.rm = T) != 0) {
-    return("Minimum not 0")
-  } else if (p <= 0 | p > 0.5) {
-    return("p must be greater than 0 and lower than 0.5 (50%)")
-  } else if (!is.numeric(df[, j])) {
-    return("Characteristic (x) not found or it is not a number")
-  } else if (length(unique(df[, j])) < 5) {
-    return("Uniques values < 5")
   } else {
     ctree = ctree(
       formula(paste(y, "~", x)),
@@ -79,7 +169,7 @@ smbinning = function(df, y, x, p = 0.05) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, ctree[i]$node$split$breaks)
     }
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -705,7 +795,6 @@ smbinning.eda = function(df, rounding = 3, pbar = 1) {
 #' result$ivtable
 
 smbinning.factor <- function(df, y, x, maxcat = 10) {
-
   require(assertthat)
   require(tidyverse)
 
