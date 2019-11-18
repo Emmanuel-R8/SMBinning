@@ -34,8 +34,8 @@ smbinning = function(df, y, x, p = 0.05) {
 
   # Check data frame and formats
   assert_that(is.data.frame(df), msg = "Data not a data.frame")
-  assert_that(is.string(x), msg = "x must be a string.")
-  assert_that(is.string(y), msg = "y must be a string.")
+  assert_that(is.string(x),      msg = "x must be a string.")
+  assert_that(is.string(y),      msg = "y must be a string.")
 
   assert_that(str_detect(x), "\\." == FALSE, "x cannot contain a dot.")
   assert_that(str_detect(y), "\\." == FALSE, "y cannot contain a dot.")
@@ -704,7 +704,7 @@ smbinning.eda = function(df, rounding = 3, pbar = 1) {
 #' result=smbinning.factor(smbsimdf1,x="inc",y="fgood", maxcat=11)
 #' result$ivtable
 
-smbinning.factor = function(df, y, x, maxcat = 10) {
+smbinning.factor <- function(df, y, x, maxcat = 10) {
 
   require(assertthat)
   require(tidyverse)
@@ -714,40 +714,33 @@ smbinning.factor = function(df, y, x, maxcat = 10) {
   assert_that(is.string(x), msg = "x must be a string.")
   assert_that(is.string(y), msg = "y must be a string.")
 
-  assert_that(str_detect(x), "\\." == FALSE, "x cannot contain a dot.")
-  assert_that(str_detect(y), "\\." == FALSE, "y cannot contain a dot.")
-  assert_that(tolower(y) != "default"), msg = "Field y cannot be named 'default'.")
+  assert_that(str_detect(x, "\\.") == FALSE, msg = "x cannot contain a dot.")
+  assert_that(str_detect(y, "\\.") == FALSE, msg = "y cannot contain a dot.")
+  assert_that(tolower(y) != "default",       msg = "Field y cannot be named 'default'.")
 
   i = which(names(df) == y) # Find Column for dependant
   j = which(names(df) == x) # Find Column for independant
 
-  assert_that(is.numeric(df[,i]))
+  assert_that(is.numeric(df[, i]), msg = "Field y must be numeric.")
+  assert_that(is.factor(df[, j]), msg = "Field x must be factor")
+
   assert_that(max(df[, i], na.rm = TRUE) == 1, msg = "Maximum of y must be 1.")
+  assert_that(min(df[, i], na.rm = TRUE) == 0, msg = "Minimum of y must be 0.")
 
-  if (!is.numeric(df[, i])) {
-    return("Target (y) not found or it is not numeric")
+  assert_that(between(length(levels(df[, j])), 2, maxcat),
+              msg = "x contains less than 2 or more than maxcat levels.")
 
-  } else if (any(grepl(",", df[, j]))) {
-    return("Values contain comma")
+  if (any(grepl(",", df[, j]))) {
+    return("Values in field x cannot contain commas.")
 
   } else if (fn$sqldf("select count(*) from df where
                       cast($x as text)='Inf' or cast($x as text)='-Inf'") > 0) {
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
 
-  } else if (min(df[, i], na.rm = T) != 0) {
-    return("Minimum not 0")
-
-  } else if (!is.factor(df[, j])) {
-    return("Characteristic (x) not found or it is not a factor")
-
   } else if (length(unique(df[, j])) <= 1) {
     return("Characteristic (x) requires at leats 2 uniques categories")
 
-  } else if (length(unique(df[, j])) > maxcat) {
-    return("Too many categories")
-
   } else {
-
     # Append cutpoints in a table (Automated)
     # cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
     cutvct = c()
@@ -763,7 +756,7 @@ smbinning.factor = function(df, y, x, maxcat = 10) {
       cutvct = rbind(cutvct, cuts[i])
     }
 
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     # Build Information Value Table #############################################
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
