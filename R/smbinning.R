@@ -54,10 +54,9 @@ smbinning <- function(df, y, x, p = 0.05) {
     formula(paste(y, "~", x)),
     data = df,
     na.action = na.exclude,
-    control = ctree_control(minbucket =
-                              ceiling(round(p * nrow(
-                                df
-                              ))))
+    control = ctree_control(minbucket = ceiling(round(p * nrow(
+      df
+    ))))
   )
 
   bins <- partykit::width(ctree)
@@ -73,7 +72,8 @@ smbinning <- function(df, y, x, p = 0.05) {
   col_y <- which(names(df) == y)
 
   # Append cutpoinstop()ts in a table (Automated)
-  cutvct <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
+  # Shell
+  cutvct <- data.frame(matrix(ncol = 0, nrow = 0))
   n <- length(ctree) # Number of nodes
 
   for (index_i in 1:n) {
@@ -81,7 +81,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   }
 
   # Sort / converts to a ordered vector (asc)
-  cutvct <- cutvct[order(cutvct[, 1]), ]
+  cutvct <- cutvct[order(cutvct[, 1]),]
 
   # Round to 4 dec. to avoid borderline cases
   cutvct <-  ifelse(cutvct < 0,
@@ -248,26 +248,39 @@ smbinning <- function(df, y, x, p = 0.05) {
   IVTable[col_y + 1, 7] <- IVTable[col_y, 7] + IVTable[col_y + 1, 4]
 
   # Calculating metrics
-  options(scipen = 999) # Remove Scientific Notation
-  IVTable[, 8] <-
-    round(IVTable[, 2] / IVTable[col_y + 2, 2], 4) # PctRec
-  IVTable[, 9] <- round(IVTable[, 3] / IVTable[, 2], 4) # GoodRate
-  IVTable[, 10] <- round(IVTable[, 4] / IVTable[, 2], 4) # BadRate
-  IVTable[, 11] <- round(IVTable[, 3] / IVTable[, 4], 4) # Odds
-  IVTable[, 12] <-
-    round(log(IVTable[, 3] / IVTable[, 4]), 4) # LnOdds
+  # Remove Scientific Notation
+  options(scipen = 999)
+
+  # PctRec
+  IVTable[, 8] <- round(IVTable[, 2] / IVTable[col_y + 2, 2], 4)
+
+  # GoodRate
+  IVTable[, 9] <- round(IVTable[, 3] / IVTable[, 2], 4)
+
+  # BadRate
+  IVTable[, 10] <- round(IVTable[, 4] / IVTable[, 2], 4)
+
+  # Odds
+  IVTable[, 11] <- round(IVTable[, 3] / IVTable[, 4], 4)
+
+  # LnOdds
+  IVTable[, 12] <- round(log(IVTable[, 3] / IVTable[, 4]), 4)
   G <- IVTable[col_y + 2, 3]
   B <- IVTable[col_y + 2, 4]
-  LnGB <- log(G / B) # IV Part 1
-  IVTable[, 13] <-
-    round(log(IVTable[, 3] / IVTable[, 4]) - LnGB, 4) # WoE
-  IVTable[, 14] <-
-    round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4) # Mg IV
+
+  # IV Part 1
+  LnGB <- log(G / B)
+
+  # WoE
+  IVTable[, 13] <- round(log(IVTable[, 3] / IVTable[, 4]) - LnGB, 4)
+
+  # Mg IV
+  IVTable[, 14] <-round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4)
   # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+
   # Calculates Information Value even with undefined numbers
   IVTable[col_y + 2, 14] <- 0.0000
-  for (k in 1:(nrow(IVTable) - 1))
-  {
+  for (k in 1:(nrow(IVTable) - 1)) {
     if (is.finite(IVTable[k, 14])) {
       mgiv <- IVTable[k, 14]
     } else {
@@ -290,11 +303,11 @@ smbinning <- function(df, y, x, p = 0.05) {
     cuts = cutvct
   )
 }
-
 # End smbinning
 
 
-# Begin Custom Cutpoints 20150307
+
+# Begin Custom Cutpoints
 #' Customized Binning
 #'
 #' It gives the user the ability to create customized cutpoints.
@@ -343,7 +356,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     cutvct <- rbind(cutvct, cuts[i])
   }
   cutvct <-
-    cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
   cutvct <- ifelse(cutvct < 0,
                    trunc(10000 * cutvct) / 10000,
                    ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -526,10 +539,10 @@ smbinning.custom <- function(df, y, x, cuts) {
     cuts = cutvct
   )
 }
-# End Custom Cutpoints 20150307
+# End Custom Cutpoints
 
 
-# Begin Exploratory Data Analysis 20160602
+# Begin Exploratory Data Analysis
 #' Exploratory Data Analysis (EDA)
 #'
 #' It shows basic statistics for each characteristic in a data frame.
@@ -696,10 +709,10 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   options(warn = 0) # Turn back on warnings
   list(eda = eda, edapct = edapct)
 }
-# End Exploratory Data Analysis 20160602
+# End Exploratory Data Analysis
 
 
-# Begin Binning Factors 20150407
+# Begin Binning Factors
 #' Binning on Factor Variables
 #'
 #' It generates a table with relevant metrics for all the categories of a given factor variable.
@@ -755,7 +768,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   }
 
   # Sort / converts to a ordered vector (asc)
-  cutvct <- cutvct[order(cutvct[, 1]), ]
+  cutvct <- cutvct[order(cutvct[, 1]),]
 
   # Build Information Value Table
   # Counts per not missing cutpoint
@@ -909,10 +922,10 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
     cuts = cutvct
   )
 }
-# End Binning Factors 20150407
+# End Binning Factors
 
 
-# Begin Custom Binning Factors 20171117
+# Begin Custom Binning Factors
 #' Customized Binning on Factor Variables
 #'
 #' It gives the user the ability to combine categories and create new attributes for a given characteristic.
@@ -1254,7 +1267,8 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
       df[, ncol][df[, col_id] > b[i] & df[, col_id] <= b[i + 1]] <- i
     }
   }
-  df[, ncol][df[, col_id] > b[length(b) - 1]] <- length(b) - 1 # Last
+  df[, ncol][df[, col_id] > b[length(b) - 1]] <-
+    length(b) - 1 # Last
   df[, ncol] <-
     as.factor(df[, ncol]) # Convert to factor for modeling
   blab <- c(paste("01 <=", b[2]))
@@ -1300,7 +1314,8 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
 # End Gen Characteristic
 
 
-# Ini Logit Rank 20190329
+
+# Ini Logit Rank
 #' Logistic Regression Ranking
 #'
 #' It runs all the possible logistic models for a given set of characteristics (\code{chr}) and then rank them
@@ -1334,8 +1349,8 @@ smbinning.logitrank <- function(y, chr, df) {
       atttmp <- v[j, 1]
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp <- paste0(ftmp, paste0("+", c(v[j,])[i]))
-          atttmp <- paste0(atttmp, paste0("+", c(v[j,])[i]))
+          ftmp <- paste0(ftmp, paste0("+", c(v[j, ])[i]))
+          atttmp <- paste0(atttmp, paste0("+", c(v[j, ])[i]))
         } # End columns
       } # End if more than 1 column
       fnext <- c(ftmp, fnext)
@@ -1359,14 +1374,14 @@ smbinning.logitrank <- function(y, chr, df) {
   colnames(chrsum) <- c("Characteristics", "AIC", "Deviance")
   chrsum$AIC <- as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance <- as.numeric(as.character(chrsum$Deviance))
-  chrsum <- chrsum[order(chrsum$AIC),]
+  chrsum <- chrsum[order(chrsum$AIC), ]
 
   return(chrsum)
 }
-# Ini Logit Rank 20190329
+# Ini Logit Rank
 
 
-# Begin Metrics 20171009
+# Begin Metrics
 #' Performance Metrics for a Classification Model
 #'
 #' It computes the classic performance metrics of a scoring model, including AUC, KS and all the relevant ones
@@ -1536,7 +1551,7 @@ smbinning.metrics <- function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut <- df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+    optcut <- df[df$YoudenJ == max(df$YoudenJ),]$Prediction
     df$YoudenJ <- NULL
     optcutcomment <- " (Optimal)"
 
@@ -1581,9 +1596,9 @@ smbinning.metrics <- function(dataset,
     # KS
     df$MgKS <- abs(df$PctCumAscGood - df$PctCumAscBad)
     ks <- as.numeric(max(df$MgKS))
-    scoreks <- as.numeric(df[df$MgKS == ks, ]$Prediction)
-    cgks <- as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
-    cbks <- as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
+    scoreks <- as.numeric(df[df$MgKS == ks,]$Prediction)
+    cgks <- as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
+    cbks <- as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
     df$MgKS <- NULL
 
     # KS Evaluation
@@ -1601,16 +1616,16 @@ smbinning.metrics <- function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp <- df[df$Prediction == optcut, ]$CumDescGood
-      fp <- df[df$Prediction == optcut, ]$CumDescBad
-      fn <- df[df$Prediction == optcut, ]$FN
-      tn <- df[df$Prediction == optcut, ]$TN
+      tp <- df[df$Prediction == optcut,]$CumDescGood
+      fp <- df[df$Prediction == optcut,]$CumDescBad
+      fn <- df[df$Prediction == optcut,]$FN
+      tn <- df[df$Prediction == optcut,]$TN
       p <- SumGoods
       n <- SumBads
       recsabovecutoff <-
-        df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
-      goodrate <- df[df$Prediction == optcut, ]$GoodRateDesc
-      badrate <- df[df$Prediction == optcut, ]$BadRateDesc
+        df[df$Prediction == optcut,]$CumDescTotal / SumRecords
+      goodrate <- df[df$Prediction == optcut,]$GoodRateDesc
+      badrate <- df[df$Prediction == optcut,]$BadRateDesc
 
       # Report on Metrics
       admetrics <- character()
@@ -1804,11 +1819,10 @@ smbinning.metrics <- function(dataset,
     }
   } # Close else
 } # Close function
+# Ends Metrics
 
-# Ends Metrics 20171009
 
-
-# Ini: Metrics Plot 20171022
+# Ini: Metrics Plot
 #' Visualization of a Classification Matrix
 #'
 #' It generates four plots after running and saving the output report from \code{smbinning.metrics}.
@@ -1852,7 +1866,7 @@ smbinning.metrics.plot <-
 
     } else {
       df$YoudenJ <- df$Sensitivity + df$Specificity - 1
-      optcut <- df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+      optcut <- df[df$YoudenJ == max(df$YoudenJ),]$Prediction
       df$YoudenJ <- NULL
 
       # If cutoff is specified
@@ -1866,10 +1880,10 @@ smbinning.metrics.plot <-
 
 
       # Confusion Matrix Components
-      tp <- df[df$Prediction == optcut, ]$CumDescGood
-      fp <- df[df$Prediction == optcut, ]$CumDescBad
-      fn <- df[df$Prediction == optcut, ]$FN
-      tn <- df[df$Prediction == optcut, ]$TN
+      tp <- df[df$Prediction == optcut,]$CumDescGood
+      fp <- df[df$Prediction == optcut,]$CumDescBad
+      fn <- df[df$Prediction == optcut,]$FN
+      tn <- df[df$Prediction == optcut,]$TN
 
       p <- sum(df$CntGood)
       n <- sum(df$CntBad)
@@ -2128,10 +2142,10 @@ smbinning.metrics.plot <-
     } # end else
   }
 
-# End: Metrics Plot 20171022
+# End: Metrics Plot
 
 
-# Ini Monotonic Binning 20181016
+# Ini Monotonic Binning
 #' Monotonic Binning
 #'
 #' It gives the user the ability to impose a monotonic trend for good/bad rates per bin.
@@ -2226,8 +2240,7 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
   return(result)
 
 } # End function monotonic
-
-# End Monotonic Binning 20181016
+# End Monotonic Binning
 
 
 # Begin Plotting
@@ -2356,7 +2369,7 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
 }
 # End Plotting
 
-# Ini: PSI 20170821
+# Ini: PSI
 #' Population Stability Index
 #'
 #' Often models are developed using multiple periods in time for a number of reasons.
@@ -2425,7 +2438,7 @@ smbinning.psi <- function(df, y, x) {
 
     psimg <- rbind(psimg, PSI = colSums(psimg))
     psimg <- as.table(psimg) # Table with Mg PSI
-    psitable <- psimg[nrow(psimg),] # Extract total PSI only
+    psitable <- psimg[nrow(psimg), ] # Extract total PSI only
     psitable <- as.data.frame(psitable)
     # Plot
     psitable$Partition <-
@@ -2455,10 +2468,10 @@ smbinning.psi <- function(df, y, x) {
          psimg = psimg)
   }
 }
+# End: PSI
 
-# End: PSI 20170821
 
-# Begin Model Scaling 20170821
+# Begin Model Scaling
 #' Scaling
 #'
 #' It transforms the coefficients of a logistic regression into scaled points
@@ -2636,7 +2649,7 @@ smbinning.scaling <- function(logitraw,
     FullName <- c("(Intercept)", FullName)
     bincoeff$FullName <-
       factor(bincoeff$FullName, levels = FullName)
-    bincoeff <- bincoeff[order(bincoeff$FullName),]
+    bincoeff <- bincoeff[order(bincoeff$FullName), ]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -2665,7 +2678,7 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts <- bincoeff
     chrpts <- chrpts[, c("Characteristic", "Points")]
-    chrpts <- chrpts[-1,] # Remove (intercept)
+    chrpts <- chrpts[-1, ] # Remove (intercept)
     minmaxscore <-
       c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
         sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
@@ -2698,11 +2711,11 @@ smbinning.scaling <- function(logitraw,
     return(modelscaled)
   }
 }
+# End Model Scaling
 
-# End Model Scaling 20170821
 
 
-# Begin Add Points and Score 20170925
+# Begin Add Points and Score
 #' Generation of Score and Its Weights
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame
@@ -2746,7 +2759,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df <- within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                       chrattptstmp[j,][3])
+                       chrattptstmp[j, ][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp <- as.numeric(df$chrtmp)
@@ -2786,11 +2799,11 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
   }
   return(df)
 }
+# End Add Points and Score
 
-# End Add Points and Score 20170925
 
 
-# Begin Convert model into a SQL Statement 20171117
+# Begin Convert model into a SQL Statement
 #' Generation of SQL Code After Scaled Model
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code
@@ -2809,7 +2822,7 @@ smbinning.scoring.sql <- function(smbscaled) {
     logitscaled <- smbscaled$logitscaled
     # SQL code 1: Create table
     logitscaleddf <- data.frame(logitscaled)
-    logitscaleddf <- logitscaleddf[-1,] # Remove (intercept)
+    logitscaleddf <- logitscaleddf[-1, ] # Remove (intercept)
     uniquechctrs <-
       unique(logitscaleddf$Characteristic) # Characteristics
     codecreate <- list()
@@ -2876,13 +2889,14 @@ smbinning.scoring.sql <- function(smbscaled) {
   }
   return(cat(sqlcreate, sqlupdate))
 }
-# End Convert model intto a SQL Statement 20171117
+# End Convert model intto a SQL Statement
+
 
 
 # Begin: SQL Code
 #' SQL Code
 #'
-#' It outputs a SQL code to facilitate the generation of new binned characetristic
+#' It outputs a SQL code to facilitate the generation of new binned characteristics
 #' in a SQL environment. User must define table and new characteristic name.
 #' @param ivout An object generated by \code{smbinning}.
 #' @return A text with the SQL code for binning.
@@ -3013,7 +3027,7 @@ smbinning.sql <- function(ivout) {
 # End: SQL Code
 
 
-# Begin Summary IV 20160602
+# Begin Summary IV
 #' Information Value Summary
 #'
 #' It gives the user the ability to calculate, in one step, the IV for each characteristic of the dataset.
@@ -3125,15 +3139,14 @@ smbinning.sumiv <- function(df, y) {
   }
   close(pb)
   options(warn = 0) # Turn back on warnings
-  sumivt <- sumivt[with(sumivt, order(-IV)),]
+  sumivt <- sumivt[with(sumivt, order(-IV)), ]
   cat("", "\n")
   return(sumivt)
 }
+# End Summary IV
 
-# End Summary IV 20160602
 
-
-# Begin Plot Summary IV 20160602
+# Begin Plot Summary IV
 #' Plot Information Value Summary
 #'
 #' It gives the user the ability to plot the Information Value by characteristic.
@@ -3160,8 +3173,8 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     return("Not from smbinning.sumiv")
   }
   sumivtplot <- sumivt
-  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV),]
-  sumivtplot <- sumivtplot[order(sumivtplot$IV),]
+  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV), ]
+  sumivtplot <- sumivtplot[order(sumivtplot$IV), ]
   sumivtplot <- cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
@@ -3189,7 +3202,7 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     cex = cex
   )
 }
-# End Plot Summary IV 20160602
+# End Plot Summary IV
 
 
 
