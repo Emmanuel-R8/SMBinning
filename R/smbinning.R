@@ -172,7 +172,7 @@ smbinning <- function(df, y, x, p = 0.05) {
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
 
-    # Build Information Value Table #############################################
+    # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
     n = length(cutvct) # Number of cutpoits
@@ -338,7 +338,7 @@ smbinning <- function(df, y, x, p = 0.05) {
       ivt[i + 2, 14] = ivt[i + 2, 14] + mgiv
     }
     iv = ivt[i + 2, 14]
-    # End Inf. Value Table ######################################################
+    # End Inf. Value Table
   }
   bands = append(mincutpoint, cutvct)
   bands = append(bands, cutpoint)
@@ -353,10 +353,10 @@ smbinning <- function(df, y, x, p = 0.05) {
   )
 }
 
-# End smbinning ###########################################################
+# End smbinning
 
 
-# Begin Custom Cutpoints 20150307 #########################################
+# Begin Custom Cutpoints 20150307
 #' Customized Binning
 #'
 #' It gives the user the ability to create customized cutpoints.
@@ -426,7 +426,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
-    # Build Information Value Table #############################################
+    # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
     n = length(cutvct) # Number of cutpoits
@@ -589,7 +589,7 @@ smbinning.custom <- function(df, y, x, cuts) {
       ivt[i + 2, 14] = ivt[i + 2, 14] + mgiv
     }
     iv = ivt[i + 2, 14]
-    # End Inf. Value Table ######################################################
+    # End Inf. Value Table
   }
   bands = append(mincutpoint, cutvct)
   bands = append(bands, cutpoint)
@@ -602,10 +602,10 @@ smbinning.custom <- function(df, y, x, cuts) {
     cuts = cutvct
   )
 }
-# End Custom Cutpoints 20150307 ###############################################
+# End Custom Cutpoints 20150307
 
 
-# Begin Exploratory Data Analysis 20160602 ################################
+# Begin Exploratory Data Analysis 20160602
 #' Exploratory Data Analysis (EDA)
 #'
 #' It shows basic statistics for each characteristic in a data frame.
@@ -768,11 +768,10 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   options(warn = 0) # Turn back on warnings
   list(eda = eda, edapct = edapct)
 }
+# End Exploratory Data Analysis 20160602
 
-# End Exploratory Data Analysis 20160602 ##################################
 
-
-# Begin Binning Factors 20150407 #############################################
+# Begin Binning Factors 20150407
 #' Binning on Factor Variables
 #'
 #' It generates a table with relevant metrics for all the categories of a given factor variable.
@@ -843,7 +842,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
     }
 
     cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
-    # Build Information Value Table #############################################
+    # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
     n = length(cutvct) # Number of cutpoits
@@ -975,7 +974,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       ivt[i + 2, 14] = ivt[i + 2, 14] + mgiv
     }
     iv = ivt[i + 2, 14]
-    # End Inf. Value Table #####################################################
+    # End Inf. Value Table
   }
   list(
     ivtable = ivt,
@@ -985,10 +984,10 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
     cuts = cutvct
   )
 }
-# End Binning Factors 20150407 #################################################
+# End Binning Factors 20150407
 
 
-# Begin Custom Binning Factors 20171117 ########################################
+# Begin Custom Binning Factors 20171117
 #' Customized Binning on Factor Variables
 #'
 #' It gives the user the ability to combine categories and create new attributes for a given characteristic.
@@ -1184,7 +1183,7 @@ smbinning.factor.custom <- function(df, y, x, groups) {
       ivt[i + 2, 14] = ivt[i + 2, 14] + mgiv
     }
     iv = ivt[i + 2, 14]
-    # End Inf. Value Table #####################################################
+    # End Inf. Value Table
   }
   list(
     ivtable = ivt,
@@ -1194,10 +1193,10 @@ smbinning.factor.custom <- function(df, y, x, groups) {
     groups = groups
   )
 }
-# End Custom Binning Factors 20171117 ##########################################
+# End Custom Binning Factors 20171117
 
 
-# Begin Gen Characteristic for factor variables ################################
+# Begin Gen Characteristic for factor variables
 #' Utility to generate a new characteristic from a factor variable
 #'
 #' It generates a data frame with a new predictive characteristic from a factor variable after applying
@@ -1301,10 +1300,10 @@ smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   names(df)[names(df) == "tmpname"] = chrname
   return(df)
 }
-# End Gen Characteristic for factor variables #################################
+# End Gen Characteristic for factor variables
 
 
-# Begin Gen Characteristic #####################################################
+# Begin Gen Characteristic
 #' Utility to generate a new characteristic from a numeric variable
 #'
 #' It generates a data frame with a new predictive characteristic after applying
@@ -1384,10 +1383,10 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
   names(df)[names(df) == "tmpname"] = chrname
   return(df)
 }
-# End Gen Characteristic #######################################################
+# End Gen Characteristic
 
 
-# Ini Logit Rank 20190329 #####################################################
+# Ini Logit Rank 20190329
 #' Logistic Regression Ranking
 #'
 #' It runs all the possible logistic models for a given set of characteristics (\code{chr}) and then rank them
@@ -1449,10 +1448,10 @@ smbinning.logitrank <- function(y, chr, df) {
 }
 
 
-# Ini Logit Rank 20190329 #####################################################
+# Ini Logit Rank 20190329
 
 
-# Begin Metrics 20171009 ######################################################
+# Begin Metrics 20171009
 #' Performance Metrics for a Classification Model
 #'
 #' It computes the classic performance metrics of a scoring model, including AUC, KS and all the relevant ones
@@ -1868,10 +1867,10 @@ smbinning.metrics <- function(dataset,
   } # Close else
 } # Close function
 
-# Ends Metrics 20171009 #######################################################
+# Ends Metrics 20171009
 
 
-# Ini: Metrics Plot 20171022 #############################################
+# Ini: Metrics Plot 20171022
 #' Visualization of a Classification Matrix
 #'
 #' It generates four plots after running and saving the output report from \code{smbinning.metrics}.
@@ -2183,10 +2182,10 @@ smbinning.metrics.plot <- function(df, cutoff = NA, plot = "cmactual") {
   } # end else
 }
 
-# End: Metrics Plot 20171022 #############################################
+# End: Metrics Plot 20171022
 
 
-# Ini Monotonic Binning 20181016 #########################################
+# Ini Monotonic Binning 20181016
 #' Monotonic Binning
 #'
 #' It gives the user the ability to impose a monotonic trend for good/bad rates per bin.
@@ -2276,10 +2275,10 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 
 } # End function monotonic
 
-# End Monotonic Binning 20181016 #########################################
+# End Monotonic Binning 20181016
 
 
-# Begin Plotting ##############################################################
+# Begin Plotting
 #' Plots after binning
 #'
 #' It generates plots for distribution, bad rate, and weight of evidence after running \code{smbinning}
@@ -2399,9 +2398,9 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
     return("Options are dist, goodrate, badrate, or WoE")
   }
 }
-# End Plotting ################################################################
+# End Plotting
 
-# Ini: PSI 20170821 ###########################################################
+# Ini: PSI 20170821
 #' Population Stability Index
 #'
 #' Often models are developed using multiple periods in time for a number of reasons.
@@ -2491,9 +2490,9 @@ smbinning.psi <- function(df, y, x) {
   }
 }
 
-# End: PSI 20170821 ###########################################################
+# End: PSI 20170821
 
-# Begin Model Scaling 20170821 ################################################
+# Begin Model Scaling 20170821
 #' Scaling
 #'
 #' It transforms the coefficients of a logistic regression into scaled points
@@ -2726,10 +2725,10 @@ smbinning.scaling <- function(logitraw,
   }
 }
 
-# End Model Scaling 20170821 ################################################
+# End Model Scaling 20170821
 
 
-# Begin Add Points and Score 20170925 ##########################################
+# Begin Add Points and Score 20170925
 #' Generation of Score and Its Weights
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame
@@ -2808,10 +2807,10 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
   return(df)
 }
 
-# End Add Points and Score 20170925 ###########################################
+# End Add Points and Score 20170925
 
 
-# Begin Convert model into a SQL Statement 20171117 ##########################
+# Begin Convert model into a SQL Statement 20171117
 #' Generation of SQL Code After Scaled Model
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code
@@ -2893,10 +2892,10 @@ smbinning.scoring.sql <- function (smbscaled) {
   }
   return(cat(sqlcreate, sqlupdate))
 }
-# End Convert model intto a SQL Statement 20171117 ############################
+# End Convert model intto a SQL Statement 20171117
 
 
-# Begin: SQL Code #############################################################
+# Begin: SQL Code
 #' SQL Code
 #'
 #' It outputs a SQL code to facilitate the generation of new binned characetristic
@@ -3025,10 +3024,10 @@ smbinning.sql <- function(ivout) {
     return(cat(gsub(", ", "", toString(sqlcodetable))))
   }
 }
-# End: SQL Code ###############################################################
+# End: SQL Code
 
 
-# Begin Summary IV 20160602 ###############################################
+# Begin Summary IV 20160602
 #' Information Value Summary
 #'
 #' It gives the user the ability to calculate, in one step, the IV for each characteristic of the dataset.
@@ -3141,10 +3140,10 @@ smbinning.sumiv <- function(df, y) {
   return(sumivt)
 }
 
-# End Summary IV 20160602 #################################################
+# End Summary IV 20160602
 
 
-# Begin Plot Summary IV 20160602 ##########################################
+# Begin Plot Summary IV 20160602
 #' Plot Information Value Summary
 #'
 #' It gives the user the ability to plot the Information Value by characteristic.
@@ -3195,10 +3194,11 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
   )
 }
 
-# End Plot Summary IV 20160602 ############################################
+# End Plot Summary IV 20160602
 
 
-# Ini: Simulated Credit Data ##############################################
+
+# Ini: Simulated Credit Data
 #' Simulated Credit Data
 #'
 #' A simulated dataset where the target variable is fgood,
@@ -3232,9 +3232,10 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
 #' @format Data frame with 2,500 rows and 22 columns with 500 defaults.
 #' @name smbsimdf1
 NULL
-# End: Simulated Credit Data ##############################################
+# End: Simulated Credit Data
 
-# Begin: Monotonic Sample Data ############################################
+
+# Begin: Monotonic Sample Data
 #' Monotonic Binning Sample Data
 #'
 #' A simulated dataset used to illustrate the application of monotonic binning.
@@ -3251,10 +3252,11 @@ NULL
 #' @format Data frame with 2,500 rows and 6 columns.
 #' @name smbsimdf2
 NULL
-# End: Monotonic Sample Data ##############################################
+# End: Monotonic Sample Data
 
 
-# Begin: Model Ranking Sample Data ########################################
+
+# Begin: Model Ranking Sample Data
 #' Monotonic Binning Sample Data
 #'
 #' A simulated dataset used to illustrate the application of model ranking.
@@ -3269,4 +3271,5 @@ NULL
 #' @format Data frame with 1,000 rows and 4 columns.
 #' @name smbsimdf3
 NULL
-# End: Model Ranking Sample Data ##########################################
+# End: Model Ranking Sample Data
+
