@@ -188,8 +188,8 @@ smbinning <- function(df, y, x, p = 0.05) {
   ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
   n = length(cutvct) # Number of cutpoints
 
-  for (y_col in 1:n) {
-    cutpoint = cutvct[y_col]
+  for (col in 1:n) {
+    cutpoint = cutvct[col]
     ivt = rbind(
       ivt,
       fn$sqldf(
@@ -207,10 +207,11 @@ smbinning <- function(df, y, x, p = 0.05) {
                   NULL as LnOdds,
                   NULL as WoE,
                   NULL as IV
-                  from df where $x is not NULL and $y is not NULL"
+              from df where $x is not NULL and $y is not NULL"
       )
     )
   }
+
   cutpoint = max(df[, x_col], na.rm = T) # Calculte Max without Missing
   cutpoint = ifelse(cutpoint < 0,
                     trunc(10000 * cutpoint) / 10000,
@@ -233,13 +234,13 @@ smbinning <- function(df, y, x, p = 0.05) {
                 sum(case when $x <= $cutpoint and $y=1 then 1 else 0 end) as CntCumGood,
                 sum(case when $x <= $cutpoint and $y=0 then 1 else 0 end) as CntCumBad,
                 NULL as PctRec,
-               NULL as GoodRate,
+                NULL as GoodRate,
                 NULL as BadRate,
                 NULL as Odds,
                 NULL as LnOdds,
                 NULL as WoE,
                 NULL as IV
-                from df where $x is not NULL and $y is not NULL"
+             from df where $x is not NULL and $y is not NULL"
     )
   )
   # Missing Data
@@ -263,7 +264,7 @@ smbinning <- function(df, y, x, p = 0.05) {
                   NULL as LnOdds,
                   NULL as WoE,
                   NULL as IV
-                  from df where $y is not NULL"
+              from df where $y is not NULL"
       )
     )
   }
@@ -291,7 +292,7 @@ smbinning <- function(df, y, x, p = 0.05) {
                 NULL as LnOdds,
                 NULL as WoE,
                 NULL as IV
-                from df where $y is not NULL"
+            from df where $y is not NULL"
     )
   )
 
