@@ -1,0 +1,6 @@
+^.*\.Rproj$         # Used by RStudio
+^\.Rproj\.user$
+
+
+^NEWS\.md$          # A news file written in Markdown
+^\.travis\.yml$     # Used for continuous integration testing with travis
