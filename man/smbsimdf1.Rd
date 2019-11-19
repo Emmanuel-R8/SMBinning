@@ -5,7 +5,7 @@
 \title{Simulated Credit Data}
 \format{Data frame with 2,500 rows and 22 columns with 500 defaults.}
 \description{
-A simulated dataset where the target variable is fgood, 
+A simulated dataset where the target variable is fgood,
 which represents the binary status of default (0) and not default (1).
 }
 \details{

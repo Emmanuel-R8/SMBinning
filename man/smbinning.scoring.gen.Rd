@@ -16,7 +16,7 @@ The command \code{smbinning.scoring} generates a data frame with the final scale
 corresponding scaled weights per characteristic.
 }
 \description{
-After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame 
+After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame
 with the final Score and additional fields with the points assigned to each characteristic so the user
 can see how the final score is calculated. Example shown on \code{smbinning.scaling} section.
 }

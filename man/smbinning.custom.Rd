@@ -12,14 +12,14 @@ smbinning.custom(df, y, x, cuts)
 \item{y}{Binary response variable (0,1). Integer (\code{int}) is required.
 Name of \code{y} must not have a dot. Name "default" is not allowed.}
 
-\item{x}{Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed. 
+\item{x}{Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed.
 Name of \code{x} must not have a dot.}
 
 \item{cuts}{Vector with the cutpoints selected by the user. It does not have a default so user must define it.}
 }
 \value{
 The command \code{smbinning.custom} generates and object containing the necessary info and utilities for binning.
-The user should save the output result so it can be used 
+The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 }
 \description{

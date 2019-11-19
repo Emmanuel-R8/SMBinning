@@ -18,14 +18,14 @@ Name of \code{y} must not have a dot.}
 Name of \code{x} must not have a dot.}
 }
 \value{
-The command \code{smbinning.factor.custom} generates an object containing the necessary information 
+The command \code{smbinning.factor.custom} generates an object containing the necessary information
 and utilities for binning.
-The user should save the output result so it can be used 
+The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 }
 \description{
 It gives the user the ability to combine categories and create new attributes for a given characteristic.
-Once these new attribues are created in a list (called \code{groups}), the funtion generates a table for 
+Once these new attribues are created in a list (called \code{groups}), the funtion generates a table for
 the uniques values of a given factor variable.
 }
 \examples{

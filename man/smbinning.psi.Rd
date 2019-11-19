@@ -14,7 +14,7 @@ smbinning.psi(df, y, x)
 \item{x}{Feature to be evaluated in terms of stability (It must be factor).}
 }
 \value{
-Three crosstabs by feature and period that show the frequency (psicnt), 
+Three crosstabs by feature and period that show the frequency (psicnt),
 percentage (psipct) and PSI (psimg), and a plot for the analyzed characteristic.
 }
 \description{
@@ -29,5 +29,5 @@ using the first one as the reference.
 library(smbinning)
 
 # Check stability for income
-smbinning.psi(df=smbsimdf1,y="period",x="inc") 
+smbinning.psi(df=smbsimdf1,y="period",x="inc")
 }

@@ -15,21 +15,21 @@ Name of \code{y} must not have a dot. Name "default" is not allowed.}
 \item{x}{Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed.
 Name of \code{x} must not have a dot.}
 
-\item{p}{Percentage of records per bin. Default 5\% (0.05). 
+\item{p}{Percentage of records per bin. Default 5\% (0.05).
 This parameter only accepts values greater that 0.00 (0\%) and lower than 0.50 (50\%).}
 }
 \value{
 The command \code{smbinning} generates and object containing the necessary info and utilities for binning.
-The user should save the output result so it can be used 
+The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 }
 \description{
 \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
-This process, also known as \emph{supervised discretization}, 
-utilizes \href{https://cran.r-project.org/package=partykit}{Recursive Partitioning} to categorize 
+This process, also known as \emph{supervised discretization},
+utilizes \href{https://cran.r-project.org/package=partykit}{Recursive Partitioning} to categorize
 the numeric characteristic.\cr
-The especific algorithm is Conditional Inference Trees 
-which initially excludes missing values (\code{NA}) to compute the cutpoints, adding them back later in the 
+The especific algorithm is Conditional Inference Trees
+which initially excludes missing values (\code{NA}) to compute the cutpoints, adding them back later in the
 process for the calculation of the \emph{Information Value}.
 }
 \examples{

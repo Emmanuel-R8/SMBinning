@@ -13,6 +13,6 @@ smbinning.scoring.sql(smbscaled)
 The command \code{smbinning.scoring.sql} generates a SQL code to implement the model the model in SQL.
 }
 \description{
-After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code 
+After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring.sql} generates a SQL code
 that creates and updates all variables present in the scaled model. Example shown on \code{smbinning.scaling} section.
 }

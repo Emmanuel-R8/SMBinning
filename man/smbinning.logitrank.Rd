@@ -14,7 +14,7 @@ smbinning.logitrank(y, chr, df)
 \item{df}{Data frame.}
 }
 \value{
-The command \code{smbinning.logitrank} returns a table with the combination of characteristics 
+The command \code{smbinning.logitrank} returns a table with the combination of characteristics
 and their corresponding AIC and deviance. The table is ordered by AIC from lowest (best) to highest.
 }
 \description{

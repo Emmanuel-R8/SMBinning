@@ -13,8 +13,8 @@ smbinning.sumiv(df, y)
 Name of \code{y} must not have a dot. Name "default" is not allowed.}
 }
 \value{
-The command \code{smbinning.sumiv} generates a table that lists each characteristic 
-with its corresponding IV for those where the calculation is possible, otherwise it will generate a 
+The command \code{smbinning.sumiv} generates a table that lists each characteristic
+with its corresponding IV for those where the calculation is possible, otherwise it will generate a
 missing value (\code{NA}).
 }
 \description{

@@ -19,7 +19,7 @@ Name of \code{x} must not have a dot.}
 }
 \value{
 The command \code{smbinning.factor} generates and object containing the necessary info and utilities for binning.
-The user should save the output result so it can be used 
+The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 }
 \description{

@@ -13,7 +13,7 @@ smbinning.sql(ivout)
 A text with the SQL code for binning.
 }
 \description{
-It outputs a SQL code to facilitate the generation of new binned characetristic 
+It outputs a SQL code to facilitate the generation of new binned characetristic
 in a SQL environment. User must define table and new characteristic name.
 }
 \examples{

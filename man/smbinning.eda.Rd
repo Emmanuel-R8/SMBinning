@@ -14,7 +14,7 @@ smbinning.eda(df, rounding = 3, pbar = 1)
 \item{pbar}{Optional parameter that turns on or off a progress bar. Default value is 1.}
 }
 \value{
-The command \code{smbinning.eda} generates two data frames that list each characteristic 
+The command \code{smbinning.eda} generates two data frames that list each characteristic
 with basic statistics such as extreme values and quartiles;
 and also percentages of missing values and outliers, among others.
 }
@@ -35,7 +35,7 @@ The report includes:
   \item StDv: Standard deviation of a sample.
   \item Neg: Number of negative values.
   \item Pos: Number of positive values.
-  \item OutLo: Number of outliers. Records below \code{Q25-1.5*IQR}, where \code{IQR=Q75-Q25}. 
+  \item OutLo: Number of outliers. Records below \code{Q25-1.5*IQR}, where \code{IQR=Q75-Q25}.
   \item OutHi: Number of outliers. Records above \code{Q75+1.5*IQR}, where \code{IQR=Q75-Q25}.
   }
 }

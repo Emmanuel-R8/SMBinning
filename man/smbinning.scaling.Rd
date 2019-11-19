@@ -7,7 +7,7 @@
 smbinning.scaling(logitraw, pdo = 20, score = 720, odds = 99)
 }
 \arguments{
-\item{logitraw}{Logistic regression (glm) that must have specified \code{family=binomial} and 
+\item{logitraw}{Logistic regression (glm) that must have specified \code{family=binomial} and
 whose variables have been generated with \code{smbinning.gen} or \code{smbinning.factor.gen}.}
 
 \item{pdo}{Points to double the oods.}

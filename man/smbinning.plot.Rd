@@ -14,7 +14,7 @@ smbinning.plot(ivout, option = "dist", sub = "")
 \item{sub}{Subtitle for the chart (optional).}
 }
 \description{
-It generates plots for distribution, bad rate, and weight of evidence after running \code{smbinning} 
+It generates plots for distribution, bad rate, and weight of evidence after running \code{smbinning}
 and saving its output.
 }
 \examples{

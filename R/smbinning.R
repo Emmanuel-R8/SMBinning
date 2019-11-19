@@ -29,7 +29,6 @@
 #' result$ctree # Decision tree
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
-
   # Check data frame and formats
   tryCatch({
     assertthat::assert_that(is.data.frame(df))
@@ -96,7 +95,6 @@ smbinning <- function(df, y, x, p = 0.05) {
     return(NA)
   })
 
-
   tryCatch({
     assertthat::assert_that(is.numeric(df[, y_col]))
   },
@@ -144,45 +142,58 @@ smbinning <- function(df, y, x, p = 0.05) {
     return(NA)
   })
 
+  tryCatch({
+    assertthat::assert_that(sum(is.infinite(df[, x_col])) == 0)
+  },
+  error = function(e) {
+    message("x contains infinite values. Replace with NA.")
+    return(NA)
+  })
 
-  if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'") >
-      0) {
-    return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
-  } else {
-    ctree = partykit::ctree(
-      formula(paste(y, "~", x)),
-      data = df,
-      na.action = na.exclude,
-      control = ctree_control(minbucket = ceiling(round(p *
-                                                          nrow(
-        df
-      ))))
-    )
-    bins = partykit::width(ctree)
-    if (bins < 2) {
-      return("No significant splits")
-    }
-    # Append cutpoinstop()ts in a table (Automated)
-    cutvct = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
-    n = length(ctree) # Number of nodes
-    for (y_col in 1:n) {
-      cutvct = rbind(cutvct, ctree[y_col]$node$split$breaks)
-    }
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
-    cutvct = ifelse(cutvct < 0,
-                    trunc(10000 * cutvct) / 10000,
-                    ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
 
-    # Build Information Value Table
-    # Counts per not missing cutpoint
-    ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
-    n = length(cutvct) # Number of cutpoits
-    for (y_col in 1:n) {
-      cutpoint = cutvct[y_col]
-      ivt = rbind(
-        ivt,
-        fn$sqldf(
-          "select '<= $cutpoint' as Cutpoint,
+  ctree = partykit::ctree(
+    formula(paste(y, "~", x)),
+    data = df,
+    na.action = na.exclude,
+    control = ctree_control(minbucket =
+                              ceiling(round(p * nrow(
+                                df
+                              ))))
+  )
+
+  bins = partykit::width(ctree)
+  tryCatch({
+    assertthat::assert_that(bins >= 2)
+  },
+  warning = function(e) {
+    message("No significant splits.")
+    return(NA)
+  })
+
+  # Append cutpoinstop()ts in a table (Automated)
+  cutvct = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
+  n = length(ctree) # Number of nodes
+
+  for (y_col in 1:n) {
+    cutvct = rbind(cutvct, ctree[y_col]$node$split$breaks)
+  }
+
+  cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+  cutvct = ifelse(cutvct < 0,
+                  trunc(10000 * cutvct) / 10000,
+                  ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
+
+  # Build Information Value Table
+  # Counts per not missing cutpoint
+  ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
+  n = length(cutvct) # Number of cutpoints
+
+  for (y_col in 1:n) {
+    cutpoint = cutvct[y_col]
+    ivt = rbind(
+      ivt,
+      fn$sqldf(
+        "select '<= $cutpoint' as Cutpoint,
                   NULL as CntRec,
                   NULL as CntGood,
                   NULL as CntBad,
@@ -197,24 +208,24 @@ smbinning <- function(df, y, x, p = 0.05) {
                   NULL as WoE,
                   NULL as IV
                   from df where $x is not NULL and $y is not NULL"
-        )
       )
-    }
-    cutpoint = max(df[, x_col], na.rm = T) # Calculte Max without Missing
-    cutpoint = ifelse(cutpoint < 0,
-                      trunc(10000 * cutpoint) / 10000,
-                      ceiling(10000 * cutpoint) / 10000) # Round to 4 dec. to avoid borderline cases
-    maxcutpoint = max(cutvct) # Calculte Max cut point
-    mincutpoint = min(df[, x_col], na.rm = T) # Calculte Min without Missing for later usage
-    mincutpoint = ifelse(
-      mincutpoint < 0,
-      trunc(10000 * mincutpoint) / 10000,
-      ceiling(10000 * mincutpoint) / 10000
-    ) # Round to 4 dec. to avoid borderline cases
-    ivt = rbind(
-      ivt,
-      fn$sqldf(
-        "select '> $maxcutpoint' as Cutpoint,
+    )
+  }
+  cutpoint = max(df[, x_col], na.rm = T) # Calculte Max without Missing
+  cutpoint = ifelse(cutpoint < 0,
+                    trunc(10000 * cutpoint) / 10000,
+                    ceiling(10000 * cutpoint) / 10000) # Round to 4 dec. to avoid borderline cases
+  maxcutpoint = max(cutvct) # Calculte Max cut point
+  mincutpoint = min(df[, x_col], na.rm = T) # Calculte Min without Missing for later usage
+  mincutpoint = ifelse(
+    mincutpoint < 0,
+    trunc(10000 * mincutpoint) / 10000,
+    ceiling(10000 * mincutpoint) / 10000
+  ) # Round to 4 dec. to avoid borderline cases
+  ivt = rbind(
+    ivt,
+    fn$sqldf(
+      "select '> $maxcutpoint' as Cutpoint,
                 NULL as CntRec,
                 NULL as CntGood,
                 NULL as CntBad,
@@ -229,16 +240,16 @@ smbinning <- function(df, y, x, p = 0.05) {
                 NULL as WoE,
                 NULL as IV
                 from df where $x is not NULL and $y is not NULL"
-      )
     )
-    # Missing Data
-    x.na = fn$sqldf("select count(*) from df where $x is null")
-    y.na = fn$sqldf("select count(*) from df where $y is null")
-    if (x.na > 0) {
-      ivt = rbind(
-        ivt,
-        fn$sqldf(
-          "select 'Missing' as Cutpoint,
+  )
+  # Missing Data
+  x.na = fn$sqldf("select count(*) from df where $x is null")
+  y.na = fn$sqldf("select count(*) from df where $y is null")
+  if (x.na > 0) {
+    ivt = rbind(
+      ivt,
+      fn$sqldf(
+        "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
                   sum(case when $x is NULL and $y=0 then 1 else 0 end) as CntBad,
@@ -253,20 +264,20 @@ smbinning <- function(df, y, x, p = 0.05) {
                   NULL as WoE,
                   NULL as IV
                   from df where $y is not NULL"
-        )
       )
-    }
+    )
+  }
 
-    else {
-      ivt = rbind(ivt,
-                  c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
-    }
+  else {
+    ivt = rbind(ivt,
+                c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+  }
 
-    # Total
-    ivt = rbind(
-      ivt,
-      fn$sqldf(
-        "select 'Total' as Cutpoint,
+  # Total
+  ivt = rbind(
+    ivt,
+    fn$sqldf(
+      "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
                 sum(case when $y=0 then 1 else 0 end) as CntBad,
@@ -281,66 +292,66 @@ smbinning <- function(df, y, x, p = 0.05) {
                 NULL as WoE,
                 NULL as IV
                 from df where $y is not NULL"
-      )
     )
+  )
 
-    # Covert to table numeric
-    options(warn = -1)
-    ncol = ncol(ivt)
-    for (y_col in 2:ncol) {
-      ivt[, y_col] = as.numeric(ivt[, y_col])
-    }
-    options(warn = 0)
-
-    # Complete Table
-    ivt[1, 2] = ivt[1, 5] # Nbr Records
-    ivt[1, 3] = ivt[1, 6] # Nbr Goods
-    ivt[1, 4] = ivt[1, 7] # Nbr Bads
-
-    # From 2nd row
-    n = nrow(ivt) - 2
-    for (y_col in 2:n) {
-      ivt[y_col, 2] = ivt[y_col, 5] - ivt[y_col - 1, 5]
-      ivt[y_col, 3] = ivt[y_col, 6] - ivt[y_col - 1, 6]
-      ivt[y_col, 4] = ivt[y_col, 7] - ivt[y_col - 1, 7]
-    }
-
-    ivt[2, 2] = ivt[2, 5] - ivt[1, 5]
-    ivt[2, 3] = ivt[2, 6] - ivt[1, 6]
-    ivt[2, 4] = ivt[2, 7] - ivt[1, 7]
-
-    # Missing row.  Update: Added "if" statement
-    ivt[y_col + 1, 5] = ivt[y_col, 5] + ivt[y_col + 1, 2]
-    ivt[y_col + 1, 6] = ivt[y_col, 6] + ivt[y_col + 1, 3]
-    ivt[y_col + 1, 7] = ivt[y_col, 7] + ivt[y_col + 1, 4]
-
-    # Calculating metrics
-    options(scipen = 999) # Remove Scientific Notation
-    ivt[, 8] = round(ivt[, 2] / ivt[y_col + 2, 2], 4) # PctRec
-    ivt[, 9] = round(ivt[, 3] / ivt[, 2], 4) # GoodRate
-    ivt[, 10] = round(ivt[, 4] / ivt[, 2], 4) # BadRate
-    ivt[, 11] = round(ivt[, 3] / ivt[, 4], 4) # Odds
-    ivt[, 12] = round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
-    G = ivt[y_col + 2, 3]
-    B = ivt[y_col + 2, 4]
-    LnGB = log(G / B) # IV Part 1
-    ivt[, 13] = round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
-    ivt[, 14] = round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
-    # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
-    # Calculates Information Value even with undefined numbers
-    ivt[y_col + 2, 14] = 0.0000
-    for (k in 1:(nrow(ivt) - 1))
-    {
-      if (is.finite(ivt[k, 14])) {
-        mgiv = ivt[k, 14]
-      } else {
-        mgiv = 0.0000
-      }
-      ivt[y_col + 2, 14] = ivt[y_col + 2, 14] + mgiv
-    }
-    iv = ivt[y_col + 2, 14]
-    # End Inf. Value Table
+  # Covert to table numeric
+  options(warn = -1)
+  ncol = ncol(ivt)
+  for (y_col in 2:ncol) {
+    ivt[, y_col] = as.numeric(ivt[, y_col])
   }
+  options(warn = 0)
+
+  # Complete Table
+  ivt[1, 2] = ivt[1, 5] # Nbr Records
+  ivt[1, 3] = ivt[1, 6] # Nbr Goods
+  ivt[1, 4] = ivt[1, 7] # Nbr Bads
+
+  # From 2nd row
+  n = nrow(ivt) - 2
+  for (y_col in 2:n) {
+    ivt[y_col, 2] = ivt[y_col, 5] - ivt[y_col - 1, 5]
+    ivt[y_col, 3] = ivt[y_col, 6] - ivt[y_col - 1, 6]
+    ivt[y_col, 4] = ivt[y_col, 7] - ivt[y_col - 1, 7]
+  }
+
+  ivt[2, 2] = ivt[2, 5] - ivt[1, 5]
+  ivt[2, 3] = ivt[2, 6] - ivt[1, 6]
+  ivt[2, 4] = ivt[2, 7] - ivt[1, 7]
+
+  # Missing row.  Update: Added "if" statement
+  ivt[y_col + 1, 5] = ivt[y_col, 5] + ivt[y_col + 1, 2]
+  ivt[y_col + 1, 6] = ivt[y_col, 6] + ivt[y_col + 1, 3]
+  ivt[y_col + 1, 7] = ivt[y_col, 7] + ivt[y_col + 1, 4]
+
+  # Calculating metrics
+  options(scipen = 999) # Remove Scientific Notation
+  ivt[, 8] = round(ivt[, 2] / ivt[y_col + 2, 2], 4) # PctRec
+  ivt[, 9] = round(ivt[, 3] / ivt[, 2], 4) # GoodRate
+  ivt[, 10] = round(ivt[, 4] / ivt[, 2], 4) # BadRate
+  ivt[, 11] = round(ivt[, 3] / ivt[, 4], 4) # Odds
+  ivt[, 12] = round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
+  G = ivt[y_col + 2, 3]
+  B = ivt[y_col + 2, 4]
+  LnGB = log(G / B) # IV Part 1
+  ivt[, 13] = round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
+  ivt[, 14] = round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
+  # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+  # Calculates Information Value even with undefined numbers
+  ivt[y_col + 2, 14] = 0.0000
+  for (k in 1:(nrow(ivt) - 1))
+  {
+    if (is.finite(ivt[k, 14])) {
+      mgiv = ivt[k, 14]
+    } else {
+      mgiv = 0.0000
+    }
+    ivt[y_col + 2, 14] = ivt[y_col + 2, 14] + mgiv
+  }
+  iv = ivt[y_col + 2, 14]
+  # End Inf. Value Table
+
   bands = append(mincutpoint, cutvct)
   bands = append(bands, cutpoint)
   list(
@@ -423,7 +434,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, cuts[i])
     }
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -845,7 +856,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       cutvct = rbind(cutvct, cuts[i])
     }
 
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -1428,8 +1439,8 @@ smbinning.logitrank <- function(y, chr, df) {
       atttmp = v[j, 1]
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp = paste0(ftmp, paste0("+", c(v[j, ])[i]))
-          atttmp = paste0(atttmp, paste0("+", c(v[j, ])[i]))
+          ftmp = paste0(ftmp, paste0("+", c(v[j,])[i]))
+          atttmp = paste0(atttmp, paste0("+", c(v[j,])[i]))
         } # End columns
       } # End if more than 1 column
       fnext = c(ftmp, fnext)
@@ -1451,7 +1462,7 @@ smbinning.logitrank <- function(y, chr, df) {
   colnames(chrsum) = c("Characteristics", "AIC", "Deviance")
   chrsum$AIC = as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance = as.numeric(as.character(chrsum$Deviance))
-  chrsum = chrsum[order(chrsum$AIC), ]
+  chrsum = chrsum[order(chrsum$AIC),]
 
   return(chrsum)
 }
@@ -1623,7 +1634,7 @@ smbinning.metrics <- function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
+    optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
     df$YoudenJ = NULL
     optcutcomment = " (Optimal)"
 
@@ -1667,9 +1678,9 @@ smbinning.metrics <- function(dataset,
     # KS
     df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
     ks = as.numeric(max(df$MgKS))
-    scoreks = as.numeric(df[df$MgKS == ks,]$Prediction)
-    cgks = as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
-    cbks = as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
+    scoreks = as.numeric(df[df$MgKS == ks, ]$Prediction)
+    cgks = as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
+    cbks = as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
     df$MgKS = NULL
 
     # KS Evaluation
@@ -1687,15 +1698,15 @@ smbinning.metrics <- function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut,]$CumDescGood
-      fp = df[df$Prediction == optcut,]$CumDescBad
-      fn = df[df$Prediction == optcut,]$FN
-      tn = df[df$Prediction == optcut,]$TN
+      tp = df[df$Prediction == optcut, ]$CumDescGood
+      fp = df[df$Prediction == optcut, ]$CumDescBad
+      fn = df[df$Prediction == optcut, ]$FN
+      tn = df[df$Prediction == optcut, ]$TN
       p = SumGoods
       n = SumBads
-      recsabovecutoff = df[df$Prediction == optcut,]$CumDescTotal / SumRecords
-      goodrate = df[df$Prediction == optcut,]$GoodRateDesc
-      badrate = df[df$Prediction == optcut,]$BadRateDesc
+      recsabovecutoff = df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
+      goodrate = df[df$Prediction == optcut, ]$GoodRateDesc
+      badrate = df[df$Prediction == optcut, ]$BadRateDesc
 
       # Report on Metrics
       admetrics = character()
@@ -1929,7 +1940,7 @@ smbinning.metrics.plot <-
 
     } else {
       df$YoudenJ = df$Sensitivity + df$Specificity - 1
-      optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
+      optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
       df$YoudenJ = NULL
 
       # If cutoff is specified
@@ -1943,10 +1954,10 @@ smbinning.metrics.plot <-
 
 
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut,]$CumDescGood
-      fp = df[df$Prediction == optcut,]$CumDescBad
-      fn = df[df$Prediction == optcut,]$FN
-      tn = df[df$Prediction == optcut,]$TN
+      tp = df[df$Prediction == optcut, ]$CumDescGood
+      fp = df[df$Prediction == optcut, ]$CumDescBad
+      fn = df[df$Prediction == optcut, ]$FN
+      tn = df[df$Prediction == optcut, ]$TN
 
       p = sum(df$CntGood)
       n = sum(df$CntBad)
@@ -2485,7 +2496,7 @@ smbinning.psi <- function(df, y, x) {
 
     psimg = rbind(psimg, PSI = colSums(psimg))
     psimg = as.table(psimg) # Table with Mg PSI
-    psitable = psimg[nrow(psimg), ] # Extract total PSI only
+    psitable = psimg[nrow(psimg),] # Extract total PSI only
     psitable = as.data.frame(psitable)
     # Plot
     psitable$Partition = rownames(psitable) # Create column "Partition"
@@ -2689,7 +2700,7 @@ smbinning.scaling <- function(logitraw,
     FullName = unlist(chrbinname)
     FullName = c("(Intercept)", FullName)
     bincoeff$FullName = factor(bincoeff$FullName, levels = FullName)
-    bincoeff = bincoeff[order(bincoeff$FullName), ]
+    bincoeff = bincoeff[order(bincoeff$FullName),]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -2717,7 +2728,7 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts = bincoeff
     chrpts = chrpts[, c("Characteristic", "Points")]
-    chrpts = chrpts[-1, ] # Remove (intercept)
+    chrpts = chrpts[-1,] # Remove (intercept)
     minmaxscore = c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
                     sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
 
@@ -2794,7 +2805,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df = within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                      chrattptstmp[j, ][3])
+                      chrattptstmp[j,][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp = as.numeric(df$chrtmp)
@@ -2854,7 +2865,7 @@ smbinning.scoring.sql <- function(smbscaled) {
     logitscaled = smbscaled$logitscaled
     # SQL code 1: Create table
     logitscaleddf = data.frame(logitscaled)
-    logitscaleddf = logitscaleddf[-1, ] # Remove (intercept)
+    logitscaleddf = logitscaleddf[-1,] # Remove (intercept)
     uniquechctrs = unique(logitscaleddf$Characteristic) # Characteristics
     codecreate = list()
     codecreate = c(codecreate,
@@ -3164,7 +3175,7 @@ smbinning.sumiv <- function(df, y) {
   }
   close(pb)
   options(warn = 0) # Turn back on warnings
-  sumivt = sumivt[with(sumivt, order(-IV)), ]
+  sumivt = sumivt[with(sumivt, order(-IV)),]
   cat("", "\n")
   return(sumivt)
 }
@@ -3199,8 +3210,8 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     return("Not from smbinning.sumiv")
   }
   sumivtplot = sumivt
-  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV), ]
-  sumivtplot = sumivtplot[order(sumivtplot$IV), ]
+  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV),]
+  sumivtplot = sumivtplot[order(sumivtplot$IV),]
   sumivtplot = cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
