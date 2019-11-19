@@ -1,3 +1,5 @@
+#' @include error_checking.R
+
 #' Optimal Binning for Scoring Modeling
 #'
 #' \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
@@ -30,107 +32,12 @@
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
   # Check data frame and formats
+  msg <- haveParametersError(df, x, y, xIsFactor = FALSE)
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assertthat::msg == ""
   },
   error = function(e) {
-    message("Data df not a dataframe.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(is.string(x))
-  },
-  error = function(e) {
-    message("x must be a string.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(is.string(y))
-  },
-  error = function(e) {
-    message("y must be a string.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(str_detect(x, "\\.") == FALSE)
-  },   error = function(e) {
-    message("x cannot contain a dot.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(str_detect(y, "\\.") == FALSE)
-  },
-  error = function(e) {
-    message("y cannot contain a dot.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(tolower(y) != "default")
-  },
-  error = function(e) {
-    message("Field y cannot be named 'default'.")
-    return(NA)
-  })
-
-  y_col <- which(names(df) == y) # Find Column for dependant
-  tryCatch({
-    assertthat::assert_that(y_col != 0)
-  },
-  error = function(e) {
-    message("Cannot find field y.")
-    return(NA)
-  })
-
-  x_col <- which(names(df) == x) # Find Column for independant
-  tryCatch({
-    assertthat::assert_that(x_col != 0)
-  },
-  error = function(e) {
-    message("Cannot find field x.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(is.numeric(df[, y_col]))
-  },
-  error = function(e) {
-    message("Field y must be numeric.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(is.numeric(df[, x_col]))
-  },   error = function(e) {
-    message("Field x must be numeric.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(max(df[, y_col], na.rm = TRUE) == 1)
-  },
-  error = function(e) {
-    message("Maximum of y must be 1.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(min(df[, y_col], na.rm = TRUE) == 0)
-  },
-  error = function(e) {
-    message("Minimum of y must be 0.")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(length(unique(df[, x_col])) >= 5)
-  },
-  error = function(e) {
-    message("x must have at least 5 uniques values.")
+    message(msg)
     return(NA)
   })
 
@@ -139,14 +46,6 @@ smbinning <- function(df, y, x, p = 0.05) {
   },
   error = function(e) {
     message("p must be greater than 0 and lower than 0.5 (50%).")
-    return(NA)
-  })
-
-  tryCatch({
-    assertthat::assert_that(sum(is.infinite(df[, x_col])) == 0)
-  },
-  error = function(e) {
-    message("x contains infinite values. Replace with NA.")
     return(NA)
   })
 
@@ -170,6 +69,9 @@ smbinning <- function(df, y, x, p = 0.05) {
     return(NA)
   })
 
+  col_x <- which(names(df) == x)
+  col_y <- which(names(df) == y)
+
   # Append cutpoinstop()ts in a table (Automated)
   cutvct <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
   n <- length(ctree) # Number of nodes
@@ -178,16 +80,21 @@ smbinning <- function(df, y, x, p = 0.05) {
     cutvct <-  rbind(cutvct, ctree[index_i]$node$split$breaks)
   }
 
-  cutvct <-
-    cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+  # Sort / converts to a ordered vector (asc)
+  cutvct <- cutvct[order(cutvct[, 1]), ]
+
+  # Round to 4 dec. to avoid borderline cases
   cutvct <-  ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
-                    ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
+                    ceiling(10000 * cutvct) / 10000)
 
   # Build Information Value Table
   # Counts per not missing cutpoint
-  IVTable <- data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
-  n <- length(cutvct) # Number of cutpoints
+  # Empty table
+  IVTable <- data.frame(matrix(ncol = 0, nrow = 0))
+
+  # Number of cutpoints
+  n <- length(cutvct)
 
   for (col_i in 1:n) {
     cutpoint  <-  cutvct[col_i]
@@ -214,18 +121,25 @@ smbinning <- function(df, y, x, p = 0.05) {
   }
 
   # Calculate Max without Missing
-  cutpoint <- max(df[, x_col], na.rm = TRUE)
+
+  # Round to 4 dec. to avoid borderline cases
+  cutpoint <- max(df[, col_x], na.rm = TRUE)
   cutpoint <- ifelse(cutpoint < 0,
                      trunc(10000 * cutpoint) / 10000,
-                     ceiling(10000 * cutpoint) / 10000) # Round to 4 dec. to avoid borderline cases
-  maxcutpoint <- max(cutvct) # Calculte Max cut point
-  mincutpoint <-
-    min(df[, x_col], na.rm = TRUE) # Calculte Min without Missing for later usage
+                     ceiling(10000 * cutpoint) / 10000)
+
+  # Calculte Max cut point
+  maxcutpoint <- max(cutvct)
+
+  # Calculte Min without Missing for later usage
+  mincutpoint <- min(df[, col_x], na.rm = TRUE)
+
+  # Round to 4 dec. to avoid borderline cases
   mincutpoint <- ifelse(
     mincutpoint < 0,
     trunc(10000 * mincutpoint) / 10000,
     ceiling(10000 * mincutpoint) / 10000
-  ) # Round to 4 dec. to avoid borderline cases
+  )
 
   IVTable  <-  rbind(
     IVTable,
@@ -329,21 +243,21 @@ smbinning <- function(df, y, x, p = 0.05) {
   IVTable[2, 4] <- IVTable[2, 7] - IVTable[1, 7]
 
   # Missing row.  Update: Added "if" statement
-  IVTable[y_col + 1, 5] <- IVTable[y_col, 5] + IVTable[y_col + 1, 2]
-  IVTable[y_col + 1, 6] <- IVTable[y_col, 6] + IVTable[y_col + 1, 3]
-  IVTable[y_col + 1, 7] <- IVTable[y_col, 7] + IVTable[y_col + 1, 4]
+  IVTable[col_y + 1, 5] <- IVTable[col_y, 5] + IVTable[col_y + 1, 2]
+  IVTable[col_y + 1, 6] <- IVTable[col_y, 6] + IVTable[col_y + 1, 3]
+  IVTable[col_y + 1, 7] <- IVTable[col_y, 7] + IVTable[col_y + 1, 4]
 
   # Calculating metrics
   options(scipen = 999) # Remove Scientific Notation
   IVTable[, 8] <-
-    round(IVTable[, 2] / IVTable[y_col + 2, 2], 4) # PctRec
+    round(IVTable[, 2] / IVTable[col_y + 2, 2], 4) # PctRec
   IVTable[, 9] <- round(IVTable[, 3] / IVTable[, 2], 4) # GoodRate
   IVTable[, 10] <- round(IVTable[, 4] / IVTable[, 2], 4) # BadRate
   IVTable[, 11] <- round(IVTable[, 3] / IVTable[, 4], 4) # Odds
   IVTable[, 12] <-
     round(log(IVTable[, 3] / IVTable[, 4]), 4) # LnOdds
-  G <- IVTable[y_col + 2, 3]
-  B <- IVTable[y_col + 2, 4]
+  G <- IVTable[col_y + 2, 3]
+  B <- IVTable[col_y + 2, 4]
   LnGB <- log(G / B) # IV Part 1
   IVTable[, 13] <-
     round(log(IVTable[, 3] / IVTable[, 4]) - LnGB, 4) # WoE
@@ -351,7 +265,7 @@ smbinning <- function(df, y, x, p = 0.05) {
     round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4) # Mg IV
   # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
   # Calculates Information Value even with undefined numbers
-  IVTable[y_col + 2, 14] <- 0.0000
+  IVTable[col_y + 2, 14] <- 0.0000
   for (k in 1:(nrow(IVTable) - 1))
   {
     if (is.finite(IVTable[k, 14])) {
@@ -359,9 +273,9 @@ smbinning <- function(df, y, x, p = 0.05) {
     } else {
       mgiv <- 0.0000
     }
-    IVTable[y_col + 2, 14] <- IVTable[y_col + 2, 14] + mgiv
+    IVTable[col_y + 2, 14] <- IVTable[col_y + 2, 14] + mgiv
   }
-  iv <- IVTable[y_col + 2, 14]
+  iv <- IVTable[col_y + 2, 14]
   # End Inf. Value Table
 
   bands <- append(mincutpoint, cutvct)
@@ -372,7 +286,7 @@ smbinning <- function(df, y, x, p = 0.05) {
     ctree = ctree,
     bands = bands,
     x = x,
-    col_id = x_col,
+    col_id = col_x,
     cuts = cutvct
   )
 }
@@ -687,12 +601,14 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   options(warn = -1) # Turn off warnings
   if (pbar == 1) {
     cat("", "\n")
-    pb <- txtProgressBar(min = 0,
-                         max = 1,
-                         initial = 0,
-                         style = 3,
-                         char = "-",
-                         width = 50)
+    pb <- txtProgressBar(
+      min = 0,
+      max = 1,
+      initial = 0,
+      style = 3,
+      char = "-",
+      width = 50
+    )
   }
   for (i in 1:ncol) {
     # t1=round(Sys.time()-t0,2)
@@ -824,65 +740,53 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
 #' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
   # Check data frame and formats
-  assertthat::assert_that(is.data.frame(df), msg = "Data not a data.frame")
-  assertthat::assert_that(is.string(x), msg = "x must be a string.")
-  assertthat::assert_that(is.string(y), msg = "y must be a string.")
+  msg <- haveParametersError(df, x, y, xIsFactor = TRUE)
+  tryCatch({
+    assertthat::msg == ""
+  },
+  error = function(e) {
+    message(msg)
+    return(NA)
+  })
 
-  assertthat::assert_that(str_detect(x, "\\.") == FALSE, msg = "x cannot contain a dot.")
-  assertthat::assert_that(str_detect(y, "\\.") == FALSE, msg = "y cannot contain a dot.")
-  assertthat::assert_that(tolower(y) != "default",       msg = "Field y cannot be named 'default'.")
+  col_x <- which(names(df) == x) # Find Column for independant
+  col_y <- which(names(df) == y) # Find Column for dependant
 
-  i <- which(names(df) == y) # Find Column for dependant
-  j <- which(names(df) == x) # Find Column for independant
 
-  assertthat::assert_that(is.numeric(df[, i]), msg = "Field y must be numeric.")
-  assertthat::assert_that(is.factor(df[, j]), msg = "Field x must be factor")
+  # Append cutpoints in a table (Automated)
+  # cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
+  cutvct <- c()
+  cuts <-
+    fn$sqldf("select distinct $x from df where $x is not NULL")
+  cuts <- as.vector(as.matrix(cuts))
 
-  assertthat::assert_that(max(df[, i], na.rm = TRUE) == 1, msg = "Maximum of y must be 1.")
-  assertthat::assert_that(min(df[, i], na.rm = TRUE) == 0, msg = "Minimum of y must be 0.")
+  # Number of cutpoints
+  n <- length(cuts)
 
-  assertthat::assert_that(between(length(levels(df[, j])), 2, maxcat),
-                          msg = "x contains less than 2 or more than maxcat levels.")
+  # At least 1 cutpoint
+  if (n < 1) {
+    return("No Bins")
+  }
 
-  if (any(grepl(",", df[, j]))) {
-    return("Values in field x cannot contain commas.")
+  for (row_i in 1:n) {
+    cutvct <- rbind(cutvct, cuts[row_i])
+  }
 
-  } else if (fn$sqldf("select count(*) from df where
-                      cast($x as text)='Inf' or cast($x as text)='-Inf'") > 0) {
-    return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
+  # Sort / converts to a ordered vector (asc)
+  cutvct <- cutvct[order(cutvct[, 1]), ]
 
-  } else if (length(unique(df[, j])) <= 1) {
-    return("Characteristic (x) requires at leats 2 uniques categories")
+  # Build Information Value Table
+  # Counts per not missing cutpoint
+  ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
 
-  } else {
-    # Append cutpoints in a table (Automated)
-    # cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
-    cutvct <- c()
-    cuts <-
-      fn$sqldf("select distinct $x from df where $x is not NULL")
-    cuts <- as.vector(as.matrix(cuts))
-    n <- length(cuts) # Number of cutpoints
-
-    if (n < 1) {
-      return("No Bins")
-    } # At least 1 cutpoint
-
-    for (i in 1:n) {
-      cutvct <- rbind(cutvct, cuts[i])
-    }
-
-    cutvct <-
-      cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
-    # Build Information Value Table
-    # Counts per not missing cutpoint
-    ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
-    n <- length(cutvct) # Number of cutpoits
-    for (i in 1:n) {
-      cutpoint <- cutvct[i]
-      ivt <- rbind(
-        ivt,
-        fn$sqldf(
-          "select '= ''$cutpoint''' as Cutpoint,
+  # Number of cutpoits
+  n <- length(cutvct)
+  for (row_i in 1:n) {
+    cutpoint <- cutvct[row_i]
+    ivt <- rbind(
+      ivt,
+      fn$sqldf(
+        "select '= ''$cutpoint''' as Cutpoint,
                   sum(case when $x = '$cutpoint' and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x = '$cutpoint' and $y=1 then 1 else 0 end) as CntGood,
                   sum(case when $x = '$cutpoint' and $y=0 then 1 else 0 end) as CntBad,
@@ -897,17 +801,18 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
                   NULL as WoE,
                   NULL as IV
                   from df where $x is not NULL and $y is not NULL"
-        )
       )
-    }
-    # Missing Data
-    x.na <- fn$sqldf("select count(*) from df where $x is null")
-    y.na <- fn$sqldf("select count(*) from df where $y is null")
-    if (x.na > 0) {
-      ivt <- rbind(
-        ivt,
-        fn$sqldf(
-          "select 'Missing' as Cutpoint,
+    )
+  }
+  # Missing Data
+  x.na <- sum(is.na(df[, x]))
+  y.na <- sum(is.na(df[, y]))
+
+  if (x.na > 0) {
+    ivt <- rbind(
+      ivt,
+      fn$sqldf(
+        "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
                   sum(case when $x is NULL and $y=0 then 1 else 0 end) as CntBad,
@@ -922,17 +827,18 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
                   NULL as WoE,
                   NULL as IV
                   from df where $y is not NULL"
-        )
       )
-    } else {
-      ivt <- rbind(ivt,
-                   c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
-    }
-    # Total
-    ivt <- rbind(
-      ivt,
-      fn$sqldf(
-        "select 'Total' as Cutpoint,
+    )
+  } else {
+    ivt <- rbind(ivt,
+                 c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+  }
+
+  # Total
+  ivt <- rbind(
+    ivt,
+    fn$sqldf(
+      "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
                 sum(case when $y=0 then 1 else 0 end) as CntBad,
@@ -947,72 +853,77 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
                 NULL as WoE,
                 NULL as IV
                 from df where $y is not NULL"
-      )
     )
+  )
 
-    # Covert table to numeric
-    options(warn = -1)
-    ncol <- ncol(ivt)
-    for (i in 2:ncol) {
-      ivt[, i] <- as.numeric(ivt[, i])
-    }
-    options(warn = 0)
-
-    # Complete Table: 1st row
-    ivt[1, 5] <- ivt[1, 2] # Nbr Cum. Records
-    ivt[1, 6] <- ivt[1, 3] # Nbr Cum. Goods
-    ivt[1, 7] <- ivt[1, 4] # Nbr Cum. Bads
-
-    # From 2nd row
-    n <- nrow(ivt) - 2
-    for (i in 2:n) {
-      ivt[i, 5] <- ivt[i, 2] + ivt[i - 1, 5]
-      ivt[i, 6] <- ivt[i, 3] + ivt[i - 1, 6]
-      ivt[i, 7] <- ivt[i, 4] + ivt[i - 1, 7]
-    }
-
-    ivt[2, 5] <- ivt[2, 2] + ivt[1, 5]
-    ivt[2, 6] <- ivt[2, 3] + ivt[1, 6]
-    ivt[2, 7] <- ivt[2, 4] + ivt[1, 7]
-
-    # Missing row
-    ivt[i + 1, 5] <- ivt[i, 5] + ivt[i + 1, 2]
-    ivt[i + 1, 6] <- ivt[i, 6] + ivt[i + 1, 3]
-    ivt[i + 1, 7] <- ivt[i, 7] + ivt[i + 1, 4]
-
-    # Calculating metrics
-    options(scipen = 999) # Remove Scientific Notation
-    ivt[, 8] <- round(ivt[, 2] / ivt[i + 2, 2], 4) # PctRec
-    ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
-    ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
-    ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4) # Odds
-    ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
-    G <- ivt[i + 2, 3]
-    B <- ivt[i + 2, 4]
-    LnGB <- log(G / B) # IV Part 1
-    ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
-    ivt[, 14] <-
-      round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
-    # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
-    # Calculates Information Value even with undefined numbers
-    ivt[i + 2, 14] <- 0.0000
-    for (k in 1:(nrow(ivt) - 1))
-    {
-      if (is.finite(ivt[k, 14])) {
-        mgiv <- ivt[k, 14]
-      } else {
-        mgiv <- 0.0000
-      }
-      ivt[i + 2, 14] <- ivt[i + 2, 14] + mgiv
-    }
-    iv <- ivt[i + 2, 14]
-    # End Inf. Value Table
+  # Covert table to numeric
+  options(warn = -1)
+  ncol <- ncol(ivt)
+  for (col_y in 2:ncol) {
+    ivt[, col_y] <- as.numeric(ivt[, col_y])
   }
+  options(warn = 0)
+
+  # Complete Table: 1st row
+  ivt[1, 5] <- ivt[1, 2] # Nbr Cum. Records
+  ivt[1, 6] <- ivt[1, 3] # Nbr Cum. Goods
+  ivt[1, 7] <- ivt[1, 4] # Nbr Cum. Bads
+
+  # From 2nd row
+  n <- nrow(ivt) - 2
+  for (row_i in 2:n) {
+    ivt[row_i, 5] <- ivt[row_i, 2] + ivt[row_i - 1, 5]
+    ivt[row_i, 6] <- ivt[row_i, 3] + ivt[row_i - 1, 6]
+    ivt[row_i, 7] <- ivt[row_i, 4] + ivt[row_i - 1, 7]
+  }
+
+  ivt[2, 5] <- ivt[2, 2] + ivt[1, 5]
+  ivt[2, 6] <- ivt[2, 3] + ivt[1, 6]
+  ivt[2, 7] <- ivt[2, 4] + ivt[1, 7]
+
+  # Missing row
+  ivt[col_y + 1, 5] <- ivt[col_y, 5] + ivt[col_y + 1, 2]
+  ivt[col_y + 1, 6] <- ivt[col_y, 6] + ivt[col_y + 1, 3]
+  ivt[col_y + 1, 7] <- ivt[col_y, 7] + ivt[col_y + 1, 4]
+
+  # Calculating metrics
+  options(scipen = 999) # Remove Scientific Notation
+  ivt[, 8] <- round(ivt[, 2] / ivt[col_y + 2, 2], 4) # PctRec
+  ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
+  ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
+  ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4) # Odds
+  ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
+
+  G <- ivt[col_y + 2, 3]
+  B <- ivt[col_y + 2, 4]
+  LnGB <- log(G / B) # IV Part 1
+
+  # WoE
+  ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4)
+
+  # Mg IV
+  ivt[, 14] <- round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4)
+
+  # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+  # Calculates Information Value even with undefined numbers
+  ivt[col_y + 2, 14] <- 0.0
+  for (k in 1:(nrow(ivt) - 1))
+  {
+    if (is.finite(ivt[k, 14])) {
+      mgiv <- ivt[k, 14]
+    } else {
+      mgiv <- 0.0000
+    }
+    ivt[col_y + 2, 14] <- ivt[col_y + 2, 14] + mgiv
+  }
+  iv <- ivt[col_y + 2, 14]
+  # End Inf. Value Table
+
   list(
     ivtable = ivt,
     iv = iv,
     x = x,
-    col_id = j,
+    col_id = col_x,
     cuts = cutvct
   )
 }
@@ -1052,51 +963,28 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 #' @export
 smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
+  msg <- haveParametersError(df, x, y, xIsFactor = TRUE)
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assertthat::msg == ""
   },
   error = function(e) {
-    message("Data df not a dataframe.")
+    message(msg)
     return(NA)
   })
 
-  if (is.numeric(y) |
-      is.numeric(x)) {
-    # Check if target vable is numeric
-    return("Column name not string")
-  } else if (grepl("[.]", y) |
-             grepl("[.]", x)) {
-    # Check if there is a dot
-    return("Column name with a dot [.]")
-  } else
-    i <- which(names(df) == y) # Find Column for dependant
+  col_x <- which(names(df) == x) # Find Column for independant
+  col_y <- which(names(df) == y) # Find Column for dependant
+
+  i <- which(names(df) == y) # Find Column for dependant
   j <- which(names(df) == x) # Find Column for independant
-  if (!is.numeric(df[, i])) {
-    return("Target (y) not found or it is not numeric")
-  } else if (max(df[, i], na.rm = TRUE) != 1) {
-    return("Maximum not 1")
-  } else if (any(grepl(",", df[, j]))) {
-    return("Values contain comma")
-  } else if (tolower(y) == "default") {
-    return("Field name 'default' not allowed")
-  } else if (fn$sqldf("select count(*) from df where cast($x as text)='Inf' or cast($x as text)='-Inf'") >
-             0) {
-    return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
-  } else if (min(df[, i], na.rm = TRUE) != 0) {
-    return("Minimum not 0")
-  } else if (!is.factor(df[, j])) {
-    return("Characteristic (x) not found or it is not a factor")
-  } else if (length(unique(df[, j])) <= 1) {
-    return("Characteristic (x) requires at leats 2 uniques categories")
-  } else {
-    ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
-    n <- length(groups) # Number of cutpoits
-    for (i in 1:n) {
-      cutpoint <- groups[i]
-      statement <- paste(
-        "select '",
-        gsub(",", "/", gsub("'", "", cutpoint)),
-        "' as Cutpoint,
+  ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
+  n <- length(groups) # Number of cutpoits
+  for (i in 1:n) {
+    cutpoint <- groups[i]
+    statement <- paste(
+      "select '",
+      gsub(",", "/", gsub("'", "", cutpoint)),
+      "' as Cutpoint,
                       sum(case when $x in ($cutpoint) and $y in (1,0) then 1 else 0 end) as CntRec,
                       sum(case when $x in ($cutpoint) and $y=1 then 1 else 0 end) as CntGood,
                       sum(case when $x in ($cutpoint) and $y=0 then 1 else 0 end) as CntBad,
@@ -1111,18 +999,18 @@ smbinning.factor.custom <- function(df, y, x, groups) {
                       NULL as WoE,
                       NULL as IV
                       from df where $x is not NULL and $y is not NULL",
-        sep = ""
-      )
-      ivt <- rbind(ivt, fn$sqldf(statement))
-    }
-    # Missing Data
-    x.na <- fn$sqldf("select count(*) from df where $x is null")
-    #  y.na=fn$sqldf("select count(*) from df where $y is null")
-    if (x.na > 0) {
-      ivt <- rbind(
-        ivt,
-        fn$sqldf(
-          "select 'Missing' as Cutpoint,
+      sep = ""
+    )
+    ivt <- rbind(ivt, fn$sqldf(statement))
+  }
+  # Missing Data
+  x.na <- fn$sqldf("select count(*) from df where $x is null")
+  #  y.na=fn$sqldf("select count(*) from df where $y is null")
+  if (x.na > 0) {
+    ivt <- rbind(
+      ivt,
+      fn$sqldf(
+        "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
                   sum(case when $x is NULL and $y=0 then 1 else 0 end) as CntBad,
@@ -1137,17 +1025,17 @@ smbinning.factor.custom <- function(df, y, x, groups) {
                   NULL as WoE,
                   NULL as IV
                   from df where $y is not NULL"
-        )
       )
-    } else {
-      ivt <- rbind(ivt,
-                   c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
-    }
-    # Total
-    ivt <- rbind(
-      ivt,
-      fn$sqldf(
-        "select 'Total' as Cutpoint,
+    )
+  } else {
+    ivt <- rbind(ivt,
+                 c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+  }
+  # Total
+  ivt <- rbind(
+    ivt,
+    fn$sqldf(
+      "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
                 sum(case when $y=0 then 1 else 0 end) as CntBad,
@@ -1162,67 +1050,67 @@ smbinning.factor.custom <- function(df, y, x, groups) {
                 NULL as WoE,
                 NULL as IV
                 from df where $y is not NULL"
-      )
     )
+  )
 
-    # Covert table to numeric
-    options(warn = -1)
-    ncol <- ncol(ivt)
-    for (i in 2:ncol) {
-      ivt[, i] <- as.numeric(ivt[, i])
-    }
-    options(warn = 0)
-
-    # Complete Table: 1st row
-    ivt[1, 5] <- ivt[1, 2] # Nbr Cum. Records
-    ivt[1, 6] <- ivt[1, 3] # Nbr Cum. Goods
-    ivt[1, 7] <- ivt[1, 4] # Nbr Cum. Bads
-
-    # From 2nd row
-    n <- nrow(ivt) - 2
-    for (i in 2:n) {
-      ivt[i, 5] <- ivt[i, 2] + ivt[i - 1, 5]
-      ivt[i, 6] <- ivt[i, 3] + ivt[i - 1, 6]
-      ivt[i, 7] <- ivt[i, 4] + ivt[i - 1, 7]
-    }
-
-    ivt[2, 5] <- ivt[2, 2] + ivt[1, 5]
-    ivt[2, 6] <- ivt[2, 3] + ivt[1, 6]
-    ivt[2, 7] <- ivt[2, 4] + ivt[1, 7]
-
-    # Missing row
-    ivt[i + 1, 5] <- ivt[i, 5] + ivt[i + 1, 2]
-    ivt[i + 1, 6] <- ivt[i, 6] + ivt[i + 1, 3]
-    ivt[i + 1, 7] <- ivt[i, 7] + ivt[i + 1, 4]
-
-    # Calculating metrics
-    options(scipen = 999) # Remove Scientific Notation
-    ivt[, 8] <- round(ivt[, 2] / ivt[i + 2, 2], 4) # PctRec
-    ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
-    ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
-    ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4) # Odds
-    ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
-    G <- ivt[i + 2, 3]
-    B <- ivt[i + 2, 4]
-    LnGB <- log(G / B) # IV Part 1
-    ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
-    ivt[, 14] <-
-      round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
-    # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
-    # Calculates Information Value even with undefined numbers
-    ivt[i + 2, 14] <- 0.0000
-    for (k in 1:(nrow(ivt) - 1))
-    {
-      if (is.finite(ivt[k, 14])) {
-        mgiv <- ivt[k, 14]
-      } else {
-        mgiv <- 0.0000
-      }
-      ivt[i + 2, 14] <- ivt[i + 2, 14] + mgiv
-    }
-    iv <- ivt[i + 2, 14]
-    # End Inf. Value Table
+  # Covert table to numeric
+  options(warn = -1)
+  ncol <- ncol(ivt)
+  for (i in 2:ncol) {
+    ivt[, i] <- as.numeric(ivt[, i])
   }
+  options(warn = 0)
+
+  # Complete Table: 1st row
+  ivt[1, 5] <- ivt[1, 2] # Nbr Cum. Records
+  ivt[1, 6] <- ivt[1, 3] # Nbr Cum. Goods
+  ivt[1, 7] <- ivt[1, 4] # Nbr Cum. Bads
+
+  # From 2nd row
+  n <- nrow(ivt) - 2
+  for (i in 2:n) {
+    ivt[i, 5] <- ivt[i, 2] + ivt[i - 1, 5]
+    ivt[i, 6] <- ivt[i, 3] + ivt[i - 1, 6]
+    ivt[i, 7] <- ivt[i, 4] + ivt[i - 1, 7]
+  }
+
+  ivt[2, 5] <- ivt[2, 2] + ivt[1, 5]
+  ivt[2, 6] <- ivt[2, 3] + ivt[1, 6]
+  ivt[2, 7] <- ivt[2, 4] + ivt[1, 7]
+
+  # Missing row
+  ivt[i + 1, 5] <- ivt[i, 5] + ivt[i + 1, 2]
+  ivt[i + 1, 6] <- ivt[i, 6] + ivt[i + 1, 3]
+  ivt[i + 1, 7] <- ivt[i, 7] + ivt[i + 1, 4]
+
+  # Calculating metrics
+  options(scipen = 999) # Remove Scientific Notation
+  ivt[, 8] <- round(ivt[, 2] / ivt[i + 2, 2], 4) # PctRec
+  ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
+  ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
+  ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4) # Odds
+  ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
+  G <- ivt[i + 2, 3]
+  B <- ivt[i + 2, 4]
+  LnGB <- log(G / B) # IV Part 1
+  ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
+  ivt[, 14] <-
+    round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
+  # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+  # Calculates Information Value even with undefined numbers
+  ivt[i + 2, 14] <- 0.0000
+  for (k in 1:(nrow(ivt) - 1))
+  {
+    if (is.finite(ivt[k, 14])) {
+      mgiv <- ivt[k, 14]
+    } else {
+      mgiv <- 0.0000
+    }
+    ivt[i + 2, 14] <- ivt[i + 2, 14] + mgiv
+  }
+  iv <- ivt[i + 2, 14]
+  # End Inf. Value Table
+
   list(
     ivtable = ivt,
     iv = iv,
@@ -2437,7 +2325,8 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
   } else if (option == "badrate") {
     # Bad Rate
     x_upper <- nrow(ivout$ivtable) - r
-    y_upper <- max(ivout$ivtable[1:x_upper, 10], na.rm = TRUE) * 1.25
+    y_upper <-
+      max(ivout$ivtable[1:x_upper, 10], na.rm = TRUE) * 1.25
     ch_badrate <- barplot(
       ivout$ivtable[1:x_upper, 10],
       names.arg = ivout$ivtable[1:x_upper, 1],
@@ -2458,8 +2347,10 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
   } else if (option == "WoE") {
     # WoE
     x_upper <- nrow(ivout$ivtable) - r
-    y_upper <- max(ivout$ivtable[1:x_upper, 13], na.rm = TRUE) * 1.25
-    y_lower <- min(ivout$ivtable[1:x_upper, 13], na.rm = TRUE) * 1.25
+    y_upper <-
+      max(ivout$ivtable[1:x_upper, 13], na.rm = TRUE) * 1.25
+    y_lower <-
+      min(ivout$ivtable[1:x_upper, 13], na.rm = TRUE) * 1.25
     ch_woe <- barplot(
       ivout$ivtable[1:x_upper, 13],
       names.arg = ivout$ivtable[1:x_upper, 1],
