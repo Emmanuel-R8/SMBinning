@@ -27,10 +27,8 @@
 #' result$iv # Information value
 #' result$bands # Bins or bands
 #' result$ctree # Decision tree
-
-smbinning = function(df, y, x, p = 0.05) {
-  require(assertthat)
-  require(tidyverse)
+#' @export
+smbinning <- function(df, y, x, p = 0.05) {
 
   # Check data frame and formats
   tryCatch({
@@ -169,10 +167,11 @@ smbinning = function(df, y, x, p = 0.05) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, ctree[i]$node$split$breaks)
     }
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
+
     # Build Information Value Table #############################################
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
@@ -381,8 +380,8 @@ smbinning = function(df, y, x, p = 0.05) {
 #' # Example: Customized binning
 #' result=smbinning.custom(df=smbsimdf1,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
 #' result$ivtable # Tabulation and Information Value
-
-smbinning.custom = function(df, y, x, cuts) {
+#' @export
+smbinning.custom <- function(df, y, x, cuts) {
   # Check data frame and formats
   if (!is.data.frame(df)) {
     # Check if data.frame
@@ -423,7 +422,7 @@ smbinning.custom = function(df, y, x, cuts) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, cuts[i])
     }
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -641,8 +640,8 @@ smbinning.custom = function(df, y, x, cuts) {
 #' # Example: Exploratory data analysis of dataset
 #' smbinning.eda(smbsimdf1,rounding=3)$eda # Table with basic statistics
 #' smbinning.eda(smbsimdf1,rounding=3)$edapct # Table with basic percentages
-
-smbinning.eda = function(df, rounding = 3, pbar = 1) {
+#' @export
+smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   # Check data frame and formats
   if (!is.data.frame(df)) {
     # Check if data.frame
@@ -793,10 +792,8 @@ smbinning.eda = function(df, rounding = 3, pbar = 1) {
 #' # Binning a factor variable
 #' result=smbinning.factor(smbsimdf1,x="inc",y="fgood", maxcat=11)
 #' result$ivtable
-
+#' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
-  require(assertthat)
-  require(tidyverse)
 
   # Check data frame and formats
   assert_that(is.data.frame(df), msg = "Data not a data.frame")
@@ -845,7 +842,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       cutvct = rbind(cutvct, cuts[i])
     }
 
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     # Build Information Value Table #############################################
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -1021,8 +1018,8 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 #'     "'W06','W07'",        # Group 3
 #'     "'W08','W09','W10'")) # Group 4
 #' result$ivtable
-
-smbinning.factor.custom = function(df, y, x, groups) {
+#' @export
+smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
   if (!is.data.frame(df)) {
     # Check if data.frame
@@ -1227,9 +1224,9 @@ smbinning.factor.custom = function(df, y, x, groups) {
 #' # Check new field counts
 #' table(train$g1home)
 #' table(pop$g1home)
-
 # Updated 20170910
-smbinning.factor.gen = function(df, ivout, chrname = "NewChar") {
+#' @export
+smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   df = cbind(df, tmpname = NA)
   ncol = ncol(df)
   col_id = ivout$col_id
@@ -1330,8 +1327,8 @@ smbinning.factor.gen = function(df, ivout, chrname = "NewChar") {
 #'
 #' # Check new field counts
 #' table(pop$g1dep)
-
-smbinning.gen = function(df, ivout, chrname = "NewChar") {
+#' @export
+smbinning.gen <- function(df, ivout, chrname = "NewChar") {
   df = cbind(df, tmpname = NA)
   ncol = ncol(df)
   col_id = ivout$col_id
@@ -1408,8 +1405,8 @@ smbinning.gen = function(df, ivout, chrname = "NewChar") {
 #'
 #' # Example: Best combination of characteristics
 #' smbinning.logitrank(y="fgood",chr=c("chr1","chr2","chr3"),df=smbsimdf3)
-
-smbinning.logitrank = function(y, chr, df) {
+#' @export
+smbinning.logitrank <- function(y, chr, df) {
   f = c() # Initialize empty list of formulas
   att = c() # Initialize empty list of characteristics in each formula
   for (k in 1:length(chr)) {
@@ -1423,8 +1420,8 @@ smbinning.logitrank = function(y, chr, df) {
       atttmp = v[j, 1]
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp = paste0(ftmp, paste0("+", c(v[j,])[i]))
-          atttmp = paste0(atttmp, paste0("+", c(v[j,])[i]))
+          ftmp = paste0(ftmp, paste0("+", c(v[j, ])[i]))
+          atttmp = paste0(atttmp, paste0("+", c(v[j, ])[i]))
         } # End columns
       } # End if more than 1 column
       fnext = c(ftmp, fnext)
@@ -1446,7 +1443,7 @@ smbinning.logitrank = function(y, chr, df) {
   colnames(chrsum) = c("Characteristics", "AIC", "Deviance")
   chrsum$AIC = as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance = as.numeric(as.character(chrsum$Deviance))
-  chrsum = chrsum[order(chrsum$AIC),]
+  chrsum = chrsum[order(chrsum$AIC), ]
 
   return(chrsum)
 }
@@ -1489,8 +1486,8 @@ smbinning.logitrank = function(y, chr, df) {
 #' cbs1metrics=smbinning.metrics(
 #'   dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
 #'   report=0, returndf=1) # Save metrics details
-
-smbinning.metrics = function(dataset,
+#' @export
+smbinning.metrics <- function(dataset,
                              prediction,
                              actualclass,
                              cutoff = NA,
@@ -1612,7 +1609,7 @@ smbinning.metrics = function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
     df$YoudenJ = NULL
     optcutcomment = " (Optimal)"
 
@@ -1656,9 +1653,9 @@ smbinning.metrics = function(dataset,
     # KS
     df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
     ks = as.numeric(max(df$MgKS))
-    scoreks = as.numeric(df[df$MgKS == ks, ]$Prediction)
-    cgks = as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
-    cbks = as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
+    scoreks = as.numeric(df[df$MgKS == ks,]$Prediction)
+    cgks = as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
+    cbks = as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
     df$MgKS = NULL
 
     # KS Evaluation
@@ -1676,15 +1673,15 @@ smbinning.metrics = function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut, ]$CumDescGood
-      fp = df[df$Prediction == optcut, ]$CumDescBad
-      fn = df[df$Prediction == optcut, ]$FN
-      tn = df[df$Prediction == optcut, ]$TN
+      tp = df[df$Prediction == optcut,]$CumDescGood
+      fp = df[df$Prediction == optcut,]$CumDescBad
+      fn = df[df$Prediction == optcut,]$FN
+      tn = df[df$Prediction == optcut,]$TN
       p = SumGoods
       n = SumBads
-      recsabovecutoff = df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
-      goodrate = df[df$Prediction == optcut, ]$GoodRateDesc
-      badrate = df[df$Prediction == optcut, ]$BadRateDesc
+      recsabovecutoff = df[df$Prediction == optcut,]$CumDescTotal / SumRecords
+      goodrate = df[df$Prediction == optcut,]$GoodRateDesc
+      badrate = df[df$Prediction == optcut,]$BadRateDesc
 
       # Report on Metrics
       admetrics = character()
@@ -1895,8 +1892,8 @@ smbinning.metrics = function(dataset,
 #' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactualrates')
 #' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodel')
 #' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodelrates')
-
-smbinning.metrics.plot = function(df, cutoff = NA, plot = "cmactual") {
+#' @export
+smbinning.metrics.plot <- function(df, cutoff = NA, plot = "cmactual") {
   if (names(df)[1] != "Prediction" | names(df)[2] != "CntGood") {
     return("Data not from smbinning.metrics.")
   } else if (!is.na(cutoff) &
@@ -1915,7 +1912,7 @@ smbinning.metrics.plot = function(df, cutoff = NA, plot = "cmactual") {
   }
   else {
     df$YoudenJ = df$Sensitivity + df$Specificity - 1
-    optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
     df$YoudenJ = NULL
 
     # If cutoff is specified
@@ -1929,10 +1926,10 @@ smbinning.metrics.plot = function(df, cutoff = NA, plot = "cmactual") {
 
 
     # Confusion Matrix Components
-    tp = df[df$Prediction == optcut, ]$CumDescGood
-    fp = df[df$Prediction == optcut, ]$CumDescBad
-    fn = df[df$Prediction == optcut, ]$FN
-    tn = df[df$Prediction == optcut, ]$TN
+    tp = df[df$Prediction == optcut,]$CumDescGood
+    fp = df[df$Prediction == optcut,]$CumDescBad
+    fn = df[df$Prediction == optcut,]$FN
+    tn = df[df$Prediction == optcut,]$TN
 
     p = sum(df$CntGood)
     n = sum(df$CntBad)
@@ -2213,8 +2210,8 @@ smbinning.metrics.plot = function(df, cutoff = NA, plot = "cmactual") {
 #' # Example 2: Monotonic Binning (Decreasing Good Rate per Bin)
 #' smbinning(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
 #' smbinning.monotonic(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
-
-smbinning.monotonic = function(df, y, x, p = 0.05) {
+#' @export
+smbinning.monotonic <- function(df, y, x, p = 0.05) {
   # Ini function monotonic
 
   i = which(names(df) == y) # Column for y
@@ -2310,8 +2307,8 @@ smbinning.monotonic = function(df, y, x, p = 0.05) {
 #' smbinning.plot(result,option="dist",sub="Income Level")
 #' smbinning.plot(result,option="badrate",sub="Income Level")
 #' smbinning.plot(result,option="WoE",sub="Income Level")
-
-smbinning.plot = function(ivout, option = "dist", sub = "") {
+#' @export
+smbinning.plot <- function(ivout, option = "dist", sub = "") {
   r = ifelse(ivout$ivtable[nrow(ivout$ivtable) - 1, 2] == 0, 2, 1)
   if (option == "dist") {
     # Distribution
@@ -2423,8 +2420,8 @@ smbinning.plot = function(ivout, option = "dist", sub = "") {
 #'
 #' # Check stability for income
 #' smbinning.psi(df=smbsimdf1,y="period",x="inc")
-
-smbinning.psi = function(df, y, x) {
+#' @export
+smbinning.psi <- function(df, y, x) {
   i = which(names(df) == x)
   j = which(names(df) == y)
   if (!is.data.frame(df)) {
@@ -2464,7 +2461,7 @@ smbinning.psi = function(df, y, x) {
 
     psimg = rbind(psimg, PSI = colSums(psimg))
     psimg = as.table(psimg) # Table with Mg PSI
-    psitable = psimg[nrow(psimg),] # Extract total PSI only
+    psitable = psimg[nrow(psimg), ] # Extract total PSI only
     psitable = as.data.frame(psitable)
     # Plot
     psitable$Partition = rownames(psitable) # Create column "Partition"
@@ -2563,8 +2560,8 @@ smbinning.psi = function(df, y, x) {
 #'
 #' # Example Generate SQL code from scaled model
 #' smbinning.scoring.sql(smbscaled)
-
-smbinning.scaling = function(logitraw,
+#' @export
+smbinning.scaling <- function(logitraw,
                              pdo = 20,
                              score = 720,
                              odds = 99) {
@@ -2668,7 +2665,7 @@ smbinning.scaling = function(logitraw,
     FullName = unlist(chrbinname)
     FullName = c("(Intercept)", FullName)
     bincoeff$FullName = factor(bincoeff$FullName, levels = FullName)
-    bincoeff = bincoeff[order(bincoeff$FullName),]
+    bincoeff = bincoeff[order(bincoeff$FullName), ]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -2696,7 +2693,7 @@ smbinning.scaling = function(logitraw,
     # Get Min/Max Score
     chrpts = bincoeff
     chrpts = chrpts[, c("Characteristic", "Points")]
-    chrpts = chrpts[-1,] # Remove (intercept)
+    chrpts = chrpts[-1, ] # Remove (intercept)
     minmaxscore = c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
                     sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
 
@@ -2742,8 +2739,8 @@ smbinning.scaling = function(logitraw,
 #' @param dataset A data frame.
 #' @return The command \code{smbinning.scoring} generates a data frame with the final scaled Score and its
 #' corresponding scaled weights per characteristic.
-
-smbinning.scoring.gen = function(smbscaled, dataset) {
+#' @export
+smbinning.scoring.gen <- function(smbscaled, dataset) {
   if (missing(smbscaled)) {
     # Check if logitscaled is missing or not
     return(stop("Missing argument: smbscaled"))
@@ -2773,7 +2770,7 @@ smbinning.scoring.gen = function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df = within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                      chrattptstmp[j,][3])
+                      chrattptstmp[j, ][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp = as.numeric(df$chrtmp)
@@ -2821,8 +2818,8 @@ smbinning.scoring.gen = function(smbscaled, dataset) {
 #' that creates and updates all variables present in the scaled model. Example shown on \code{smbinning.scaling} section.
 #' @param smbscaled Object generated using \code{smbinning.scaling}.
 #' @return The command \code{smbinning.scoring.sql} generates a SQL code to implement the model the model in SQL.
-
-smbinning.scoring.sql = function (smbscaled) {
+#' @export
+smbinning.scoring.sql <- function (smbscaled) {
   if (missing(smbscaled)) {
     return(stop("Argument 'smbscaled' is missing"))
   }
@@ -2833,7 +2830,7 @@ smbinning.scoring.sql = function (smbscaled) {
     logitscaled = smbscaled$logitscaled
     # SQL code 1: Create table
     logitscaleddf = data.frame(logitscaled)
-    logitscaleddf = logitscaleddf[-1,] # Remove (intercept)
+    logitscaleddf = logitscaleddf[-1, ] # Remove (intercept)
     uniquechctrs = unique(logitscaleddf$Characteristic) # Characteristics
     codecreate = list()
     codecreate = c(codecreate,
@@ -2924,8 +2921,8 @@ smbinning.scoring.sql = function (smbscaled) {
 #'   c("'W01','W02'","'W03','W04','W05'",
 #'     "'W06','W07'","'W08','W09','W10'"))
 #' smbinning.sql(result)
-
-smbinning.sql = function(ivout) {
+#' @export
+smbinning.sql <- function(ivout) {
   if (is.null(ivout$groups)) {
     lines = nrow(ivout$ivtable) - 2
     sqlcodetable = as.list(matrix(ncol = 0, nrow = 0))
@@ -3056,8 +3053,8 @@ smbinning.sql = function(ivout) {
 #'
 #' # Example: Plot of Information Value Summary
 #' smbinning.sumiv.plot(testiv)
-
-smbinning.sumiv = function(df, y) {
+#' @export
+smbinning.sumiv <- function(df, y) {
   # Check data frame and formats
   if (!is.data.frame(df)) {
     # Check if data.frame
@@ -3139,7 +3136,7 @@ smbinning.sumiv = function(df, y) {
   }
   close(pb)
   options(warn = 0) # Turn back on warnings
-  sumivt = sumivt[with(sumivt, order(-IV)),]
+  sumivt = sumivt[with(sumivt, order(-IV)), ]
   cat("", "\n")
   return(sumivt)
 }
@@ -3158,8 +3155,8 @@ smbinning.sumiv = function(df, y) {
 #' displayed on the chart. The default value is 0.9
 #' @return The command \code{smbinning.sumiv.plot} returns a plot that shows the IV
 #' for each numeric and factor characteristic in the dataset.
-
-smbinning.sumiv.plot = function(sumivt, cex = 0.9) {
+#' @export
+smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
   if (!is.data.frame(sumivt)) {
     # Check if data.frame
     return("Data not a data.frame")
@@ -3168,8 +3165,8 @@ smbinning.sumiv.plot = function(sumivt, cex = 0.9) {
     return("Not from smbinning.sumiv")
   }
   sumivtplot = sumivt
-  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV),]
-  sumivtplot = sumivtplot[order(sumivtplot$IV),]
+  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV), ]
+  sumivtplot = sumivtplot[order(sumivtplot$IV), ]
   sumivtplot = cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
