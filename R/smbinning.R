@@ -29,10 +29,9 @@
 #' result$ctree # Decision tree
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
-
   # Check data frame and formats
   tryCatch({
-    assert_that(is.data.frame(df))
+    assertthat::assert_that(is.data.frame(df))
   },
   error = function(e) {
     message("Data df not a data.frame")
@@ -40,7 +39,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(is.string(x))
+    assertthat::assert_that(is.string(x))
   },
   error = function(e) {
     message("x must be a string.")
@@ -48,7 +47,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(is.string(y))
+    assertthat::assert_that(is.string(y))
   },
   error = function(e) {
     message("y must be a string.")
@@ -56,14 +55,14 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(str_detect(x, "\\.") == FALSE)
+    assertthat::assertthat::assert_that(str_detect(x, "\\.") == FALSE)
   },   error = function(e) {
     message("x cannot contain a dot.")
     return(NA)
   })
 
   tryCatch({
-    assert_that(str_detect(y, "\\.") == FALSE)
+    assertthat::assert_that(str_detect(y, "\\.") == FALSE)
   },
   error = function(e) {
     message("y cannot contain a dot.")
@@ -71,7 +70,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(tolower(y) != "default")
+    assertthat::assert_that(tolower(y) != "default")
   },
   error = function(e) {
     message("Field y cannot be named 'default'.")
@@ -80,7 +79,7 @@ smbinning <- function(df, y, x, p = 0.05) {
 
   i = which(names(df) == y) # Find Column for dependant
   tryCatch({
-    assert_that(i != 0)
+    assertthat::assert_that(i != 0)
   },
   error = function(e) {
     message("Cannot find field y.")
@@ -89,7 +88,7 @@ smbinning <- function(df, y, x, p = 0.05) {
 
   j = which(names(df) == x) # Find Column for independant
   tryCatch({
-    assert_that(j != 0)
+    assertthat::assert_that(j != 0)
   },
   error = function(e) {
     message("Cannot find field x.")
@@ -98,7 +97,7 @@ smbinning <- function(df, y, x, p = 0.05) {
 
 
   tryCatch({
-    assert_that(is.numeric(df[, i]))
+    assertthat::assert_that(is.numeric(df[, i]))
   },
   error = function(e) {
     message("Field y must be numeric.")
@@ -106,14 +105,14 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(is.numeric(df[, j]))
+    assertthat::assert_that(is.numeric(df[, j]))
   },   error = function(e) {
     message("Field x must be numeric.")
     return(NA)
   })
 
   tryCatch({
-    assert_that(max(df[, i], na.rm = TRUE) == 1)
+    assertthat::assert_that(max(df[, i], na.rm = TRUE) == 1)
   },
   error = function(e) {
     message("Maximum of y must be 1.")
@@ -121,7 +120,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(min(df[, i], na.rm = TRUE) == 0)
+    assertthat::assert_that(min(df[, i], na.rm = TRUE) == 0)
   },
   error = function(e) {
     message("Minimum of y must be 0.")
@@ -129,7 +128,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(length(unique(df[, j])) >= 5)
+    assertthat::assert_that(length(unique(df[, j])) >= 5)
   },
   error = function(e) {
     message("x must have at least 5 uniques values.")
@@ -137,7 +136,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assert_that(between(p, 0.0, 0.5))
+    assertthat::assert_that(between(p, 0.0, 0.5))
   },
   error = function(e) {
     message("p must be greater than 0 and lower than 0.5 (50%).")
@@ -149,7 +148,7 @@ smbinning <- function(df, y, x, p = 0.05) {
       0) {
     return("Characteristic (x) with an 'Inf' value (Divided by Zero). Replace by NA")
   } else {
-    ctree = ctree(
+    ctree = partykit::ctree(
       formula(paste(y, "~", x)),
       data = df,
       na.action = na.exclude,
@@ -157,7 +156,7 @@ smbinning <- function(df, y, x, p = 0.05) {
         df
       ))))
     )
-    bins = width(ctree)
+    bins = partykit::width(ctree)
     if (bins < 2) {
       return("No significant splits")
     }
@@ -167,7 +166,7 @@ smbinning <- function(df, y, x, p = 0.05) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, ctree[i]$node$split$breaks)
     }
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -422,7 +421,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, cuts[i])
     }
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -793,27 +792,26 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
 #' result$ivtable
 #' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
-
   # Check data frame and formats
-  assert_that(is.data.frame(df), msg = "Data not a data.frame")
-  assert_that(is.string(x), msg = "x must be a string.")
-  assert_that(is.string(y), msg = "y must be a string.")
+  assertthat::assert_that(is.data.frame(df), msg = "Data not a data.frame")
+  assertthat::assert_that(is.string(x), msg = "x must be a string.")
+  assertthat::assert_that(is.string(y), msg = "y must be a string.")
 
-  assert_that(str_detect(x, "\\.") == FALSE, msg = "x cannot contain a dot.")
-  assert_that(str_detect(y, "\\.") == FALSE, msg = "y cannot contain a dot.")
-  assert_that(tolower(y) != "default",       msg = "Field y cannot be named 'default'.")
+  assertthat::assert_that(str_detect(x, "\\.") == FALSE, msg = "x cannot contain a dot.")
+  assertthat::assert_that(str_detect(y, "\\.") == FALSE, msg = "y cannot contain a dot.")
+  assertthat::assert_that(tolower(y) != "default",       msg = "Field y cannot be named 'default'.")
 
   i = which(names(df) == y) # Find Column for dependant
   j = which(names(df) == x) # Find Column for independant
 
-  assert_that(is.numeric(df[, i]), msg = "Field y must be numeric.")
-  assert_that(is.factor(df[, j]), msg = "Field x must be factor")
+  assertthat::assert_that(is.numeric(df[, i]), msg = "Field y must be numeric.")
+  assertthat::assert_that(is.factor(df[, j]), msg = "Field x must be factor")
 
-  assert_that(max(df[, i], na.rm = TRUE) == 1, msg = "Maximum of y must be 1.")
-  assert_that(min(df[, i], na.rm = TRUE) == 0, msg = "Minimum of y must be 0.")
+  assertthat::assert_that(max(df[, i], na.rm = TRUE) == 1, msg = "Maximum of y must be 1.")
+  assertthat::assert_that(min(df[, i], na.rm = TRUE) == 0, msg = "Minimum of y must be 0.")
 
-  assert_that(between(length(levels(df[, j])), 2, maxcat),
-              msg = "x contains less than 2 or more than maxcat levels.")
+  assertthat::assert_that(between(length(levels(df[, j])), 2, maxcat),
+                          msg = "x contains less than 2 or more than maxcat levels.")
 
   if (any(grepl(",", df[, j]))) {
     return("Values in field x cannot contain commas.")
@@ -841,7 +839,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       cutvct = rbind(cutvct, cuts[i])
     }
 
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -1419,8 +1417,8 @@ smbinning.logitrank <- function(y, chr, df) {
       atttmp = v[j, 1]
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp = paste0(ftmp, paste0("+", c(v[j, ])[i]))
-          atttmp = paste0(atttmp, paste0("+", c(v[j, ])[i]))
+          ftmp = paste0(ftmp, paste0("+", c(v[j,])[i]))
+          atttmp = paste0(atttmp, paste0("+", c(v[j,])[i]))
         } # End columns
       } # End if more than 1 column
       fnext = c(ftmp, fnext)
@@ -1442,7 +1440,7 @@ smbinning.logitrank <- function(y, chr, df) {
   colnames(chrsum) = c("Characteristics", "AIC", "Deviance")
   chrsum$AIC = as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance = as.numeric(as.character(chrsum$Deviance))
-  chrsum = chrsum[order(chrsum$AIC), ]
+  chrsum = chrsum[order(chrsum$AIC),]
 
   return(chrsum)
 }
@@ -1487,12 +1485,12 @@ smbinning.logitrank <- function(y, chr, df) {
 #'   report=0, returndf=1) # Save metrics details
 #' @export
 smbinning.metrics <- function(dataset,
-                             prediction,
-                             actualclass,
-                             cutoff = NA,
-                             report = 1,
-                             plot = "none",
-                             returndf = 0) {
+                              prediction,
+                              actualclass,
+                              cutoff = NA,
+                              report = 1,
+                              plot = "none",
+                              returndf = 0) {
   i = which(names(dataset) == actualclass) # Find Column for actualclass
   j = which(names(dataset) == prediction) # Find Column for prediction
   if (!is.data.frame(dataset)) {
@@ -1608,7 +1606,7 @@ smbinning.metrics <- function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
+    optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
     df$YoudenJ = NULL
     optcutcomment = " (Optimal)"
 
@@ -1652,9 +1650,9 @@ smbinning.metrics <- function(dataset,
     # KS
     df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
     ks = as.numeric(max(df$MgKS))
-    scoreks = as.numeric(df[df$MgKS == ks,]$Prediction)
-    cgks = as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
-    cbks = as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
+    scoreks = as.numeric(df[df$MgKS == ks, ]$Prediction)
+    cgks = as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
+    cbks = as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
     df$MgKS = NULL
 
     # KS Evaluation
@@ -1672,15 +1670,15 @@ smbinning.metrics <- function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut,]$CumDescGood
-      fp = df[df$Prediction == optcut,]$CumDescBad
-      fn = df[df$Prediction == optcut,]$FN
-      tn = df[df$Prediction == optcut,]$TN
+      tp = df[df$Prediction == optcut, ]$CumDescGood
+      fp = df[df$Prediction == optcut, ]$CumDescBad
+      fn = df[df$Prediction == optcut, ]$FN
+      tn = df[df$Prediction == optcut, ]$TN
       p = SumGoods
       n = SumBads
-      recsabovecutoff = df[df$Prediction == optcut,]$CumDescTotal / SumRecords
-      goodrate = df[df$Prediction == optcut,]$GoodRateDesc
-      badrate = df[df$Prediction == optcut,]$BadRateDesc
+      recsabovecutoff = df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
+      goodrate = df[df$Prediction == optcut, ]$GoodRateDesc
+      badrate = df[df$Prediction == optcut, ]$BadRateDesc
 
       # Report on Metrics
       admetrics = character()
@@ -1892,295 +1890,296 @@ smbinning.metrics <- function(dataset,
 #' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodel')
 #' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodelrates')
 #' @export
-smbinning.metrics.plot <- function(df, cutoff = NA, plot = "cmactual") {
-  if (names(df)[1] != "Prediction" | names(df)[2] != "CntGood") {
-    return("Data not from smbinning.metrics.")
-  } else if (!is.na(cutoff) &
-             !is.numeric(cutoff)) {
-    # Check if target variable is numeric
-    return("'cutoff' must be numeric.")
-  } else if (!is.na(cutoff) &
-             (max(df$Prediction) < cutoff |
-              min(df$Prediction) > cutoff)) {
-    # Check if target variable is numeric
-    return("'cutoff' out of range.")
-  } else if (plot != "cmactual" &
-             plot != "cmactualrates" & plot != "cmmodel" &
-             plot != "cmmodelrates") {
-    return("'plot' options are: 'auc', 'ks' or 'none'.")
-  }
-  else {
-    df$YoudenJ = df$Sensitivity + df$Specificity - 1
-    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
-    df$YoudenJ = NULL
+smbinning.metrics.plot <-
+  function(df, cutoff = NA, plot = "cmactual") {
+    if (names(df)[1] != "Prediction" | names(df)[2] != "CntGood") {
+      return("Data not from smbinning.metrics.")
+    } else if (!is.na(cutoff) &
+               !is.numeric(cutoff)) {
+      # Check if target variable is numeric
+      return("'cutoff' must be numeric.")
+    } else if (!is.na(cutoff) &
+               (max(df$Prediction) < cutoff |
+                min(df$Prediction) > cutoff)) {
+      # Check if target variable is numeric
+      return("'cutoff' out of range.")
+    } else if (plot != "cmactual" &
+               plot != "cmactualrates" & plot != "cmmodel" &
+               plot != "cmmodelrates") {
+      return("'plot' options are: 'auc', 'ks' or 'none'.")
+    }
+    else {
+      df$YoudenJ = df$Sensitivity + df$Specificity - 1
+      optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+      df$YoudenJ = NULL
 
-    # If cutoff is specified
-    if (!is.na(cutoff)) {
-      if ((cutoff %in% df$Prediction) == FALSE) {
-        optcut = df[which.min(abs(as.numeric(df$Prediction) - cutoff)), 1]
-      } else {
-        optcut = cutoff
+      # If cutoff is specified
+      if (!is.na(cutoff)) {
+        if ((cutoff %in% df$Prediction) == FALSE) {
+          optcut = df[which.min(abs(as.numeric(df$Prediction) - cutoff)), 1]
+        } else {
+          optcut = cutoff
+        }
       }
-    }
 
 
-    # Confusion Matrix Components
-    tp = df[df$Prediction == optcut,]$CumDescGood
-    fp = df[df$Prediction == optcut,]$CumDescBad
-    fn = df[df$Prediction == optcut,]$FN
-    tn = df[df$Prediction == optcut,]$TN
+      # Confusion Matrix Components
+      tp = df[df$Prediction == optcut, ]$CumDescGood
+      fp = df[df$Prediction == optcut, ]$CumDescBad
+      fn = df[df$Prediction == optcut, ]$FN
+      tn = df[df$Prediction == optcut, ]$TN
 
-    p = sum(df$CntGood)
-    n = sum(df$CntBad)
+      p = sum(df$CntGood)
+      n = sum(df$CntBad)
 
-    # CM Metrics
-    accuracy = (tp + tn) / (tp + fp + tn + fn)
-    sensitivity = tp / p
-    FNR = fn / p
-    specificity = tn / n
-    FPR = fp / n
-    precision = tp / (tp + fp)
-    invprecision = tn / (fn + tn)
-    FDR = fp / (tp + fp)
-    FOR = fn / (fn + tn)
-    # For AUC Calculation (Trapezoid Method)
-    df$TPR = df$Sensitivity
-    df$FPR = 1 - df$Specificity
-    df$MgAUC = 0
-    a = which(names(df) == "MgAUC")
-    f = which(names(df) == "FPR")
-    t = which(names(df) == "TPR")
-    for (i in 1:nrow(df) - 1) {
-      df[i, a] = 0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
-    }
-    # AUC
-    auc = sum(df$MgAUC)
-    df$TPR = NULL
-    df$FPR = NULL
-    df$MgAUC = NULL
+      # CM Metrics
+      accuracy = (tp + tn) / (tp + fp + tn + fn)
+      sensitivity = tp / p
+      FNR = fn / p
+      specificity = tn / n
+      FPR = fp / n
+      precision = tp / (tp + fp)
+      invprecision = tn / (fn + tn)
+      FDR = fp / (tp + fp)
+      FOR = fn / (fn + tn)
+      # For AUC Calculation (Trapezoid Method)
+      df$TPR = df$Sensitivity
+      df$FPR = 1 - df$Specificity
+      df$MgAUC = 0
+      a = which(names(df) == "MgAUC")
+      f = which(names(df) == "FPR")
+      t = which(names(df) == "TPR")
+      for (i in 1:nrow(df) - 1) {
+        df[i, a] = 0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
+      }
+      # AUC
+      auc = sum(df$MgAUC)
+      df$TPR = NULL
+      df$FPR = NULL
+      df$MgAUC = NULL
 
-    # KS
-    df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
-    ks = as.numeric(max(df$MgKS))
-    df$MgKS = NULL
+      # KS
+      df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
+      ks = as.numeric(max(df$MgKS))
+      df$MgKS = NULL
 
-    # Classification Matrix
-    cmnbr = matrix(c(tp, fn, fp, tn), nrow = 2, ncol = 2)
-    cmpctactual = matrix(c(sensitivity, FNR, FPR, specificity),
-                         nrow = 2,
-                         ncol = 2)
-    cmpctmodel = matrix(c(precision, FDR, FOR, invprecision),
-                        nrow = 2,
-                        ncol = 2)
+      # Classification Matrix
+      cmnbr = matrix(c(tp, fn, fp, tn), nrow = 2, ncol = 2)
+      cmpctactual = matrix(c(sensitivity, FNR, FPR, specificity),
+                           nrow = 2,
+                           ncol = 2)
+      cmpctmodel = matrix(c(precision, FDR, FOR, invprecision),
+                          nrow = 2,
+                          ncol = 2)
 
-    # CM, where X-axis is actual class
-    if (plot == "cmactual") {
-      cmnbrplot = cmnbr
-      colnames(cmnbrplot) = c("Actual+\n[ TP | FN ]", "Actual-\n[ FP | TN ]") # Actuals
-      rownames(cmnbrplot) = c("Model+", "Model-") # Model
-      bpactual =
-        barplot(
-          cmnbrplot,
-          ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
-          col = c("grey50", "grey85"),
-          beside = T,
-          axes = T,
-          border = NA,
-          legend.text = T,
-          args.legend = list(
-            x = "top",
+      # CM, where X-axis is actual class
+      if (plot == "cmactual") {
+        cmnbrplot = cmnbr
+        colnames(cmnbrplot) = c("Actual+\n[ TP | FN ]", "Actual-\n[ FP | TN ]") # Actuals
+        rownames(cmnbrplot) = c("Model+", "Model-") # Model
+        bpactual =
+          barplot(
+            cmnbrplot,
+            ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
+            col = c("grey50", "grey85"),
+            beside = T,
+            axes = T,
             border = NA,
-            bty = "n",
-            horiz = F
+            legend.text = T,
+            args.legend = list(
+              x = "top",
+              border = NA,
+              bty = "n",
+              horiz = F
+            )
           )
+        mtext(
+          side = 3,
+          "Classification Matrix",
+          line = 2,
+          cex = 1.2,
+          font = 2
         )
-      mtext(
-        side = 3,
-        "Classification Matrix",
-        line = 2,
-        cex = 1.2,
-        font = 2
-      )
-      mtext(
-        side = 3,
-        paste0("Records by Actual Class. Cutoff >=", optcut),
-        line = 0.75,
-        cex = 1
-      )
-      mtext(
-        side = 1,
-        "Actual Class",
-        line = 3,
-        cex = 1,
-        font = 2
-      )
-      abline(h = 0) # Horizontal line
-      text(
-        x = bpactual,
-        y = cmnbrplot,
-        label = cmnbrplot,
-        pos = 3,
-        cex = 1
-      )
-    }
+        mtext(
+          side = 3,
+          paste0("Records by Actual Class. Cutoff >=", optcut),
+          line = 0.75,
+          cex = 1
+        )
+        mtext(
+          side = 1,
+          "Actual Class",
+          line = 3,
+          cex = 1,
+          font = 2
+        )
+        abline(h = 0) # Horizontal line
+        text(
+          x = bpactual,
+          y = cmnbrplot,
+          label = cmnbrplot,
+          pos = 3,
+          cex = 1
+        )
+      }
 
 
-    # CM Percentages, where X-axis is actual class
-    if (plot == "cmactualrates") {
-      cmpctactualplot = cmpctactual
-      colnames(cmpctactualplot) = c("Actual+\n[ Sensitivity | FNR ]",
-                                    "Actual-\n[ FPR | Specificity ]") # Actuals
-      rownames(cmpctactualplot) = c("Model+", "Model-") # Model
-      bpactualpct =
-        barplot(
-          cmpctactualplot,
-          ylim = c(0, 1),
-          col = c("grey50", "grey85"),
-          beside = T,
-          axes = T,
-          border = NA,
-          legend.text = T,
-          args.legend = list(
-            x = "top",
+      # CM Percentages, where X-axis is actual class
+      if (plot == "cmactualrates") {
+        cmpctactualplot = cmpctactual
+        colnames(cmpctactualplot) = c("Actual+\n[ Sensitivity | FNR ]",
+                                      "Actual-\n[ FPR | Specificity ]") # Actuals
+        rownames(cmpctactualplot) = c("Model+", "Model-") # Model
+        bpactualpct =
+          barplot(
+            cmpctactualplot,
+            ylim = c(0, 1),
+            col = c("grey50", "grey85"),
+            beside = T,
+            axes = T,
             border = NA,
-            bty = "n",
-            horiz = F
+            legend.text = T,
+            args.legend = list(
+              x = "top",
+              border = NA,
+              bty = "n",
+              horiz = F
+            )
           )
+        mtext(
+          side = 3,
+          "Classification Matrix",
+          line = 2,
+          cex = 1.2,
+          font = 2
         )
-      mtext(
-        side = 3,
-        "Classification Matrix",
-        line = 2,
-        cex = 1.2,
-        font = 2
-      )
-      mtext(
-        side = 3,
-        paste0("Percentage by Actual Class. Cutoff >=", optcut),
-        line = 0.75,
-        cex = 1
-      )
-      mtext(
-        side = 1,
-        "Actual Class",
-        line = 3,
-        cex = 1,
-        font = 2
-      )
-      abline(h = 0) # Horizontal line
-      text(
-        x = bpactualpct,
-        y = cmpctactualplot,
-        label = round(cmpctactualplot, 4),
-        pos = 3,
-        cex = 1
-      )
-    }
+        mtext(
+          side = 3,
+          paste0("Percentage by Actual Class. Cutoff >=", optcut),
+          line = 0.75,
+          cex = 1
+        )
+        mtext(
+          side = 1,
+          "Actual Class",
+          line = 3,
+          cex = 1,
+          font = 2
+        )
+        abline(h = 0) # Horizontal line
+        text(
+          x = bpactualpct,
+          y = cmpctactualplot,
+          label = round(cmpctactualplot, 4),
+          pos = 3,
+          cex = 1
+        )
+      }
 
-    # CM Numbers, where X-axis is model prediction
-    if (plot == "cmmodel") {
-      cmnbrplot = cmnbr
-      colnames(cmnbrplot) = c("Actual+", "Actual-") # Actuals
-      rownames(cmnbrplot) = c("Model+\n[ TP | FP ]", "Model-\n [ FN | TN ]") # Model
-      bpmodel =
-        barplot(
-          t(cmnbrplot),
-          ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
-          col = c("grey50", "grey85"),
-          beside = T,
-          axes = T,
-          border = NA,
-          legend.text = T,
-          args.legend = list(
-            x = "top",
+      # CM Numbers, where X-axis is model prediction
+      if (plot == "cmmodel") {
+        cmnbrplot = cmnbr
+        colnames(cmnbrplot) = c("Actual+", "Actual-") # Actuals
+        rownames(cmnbrplot) = c("Model+\n[ TP | FP ]", "Model-\n [ FN | TN ]") # Model
+        bpmodel =
+          barplot(
+            t(cmnbrplot),
+            ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
+            col = c("grey50", "grey85"),
+            beside = T,
+            axes = T,
             border = NA,
-            bty = "n",
-            horiz = F
+            legend.text = T,
+            args.legend = list(
+              x = "top",
+              border = NA,
+              bty = "n",
+              horiz = F
+            )
           )
+        mtext(
+          side = 3,
+          "Classification Matrix",
+          line = 2,
+          cex = 1.2,
+          font = 2
         )
-      mtext(
-        side = 3,
-        "Classification Matrix",
-        line = 2,
-        cex = 1.2,
-        font = 2
-      )
-      mtext(
-        side = 3,
-        paste0("Records by Model Prediction. Cutoff >=", optcut),
-        line = 0.75,
-        cex = 1
-      )
-      mtext(
-        side = 1,
-        "Model Prediction",
-        line = 3,
-        cex = 1,
-        font = 2
-      )
-      abline(h = 0) # Horizontal line
-      text(
-        x = bpmodel,
-        y = t(cmnbrplot),
-        label = t(cmnbrplot),
-        pos = 3,
-        cex = 1
-      )
-    }
+        mtext(
+          side = 3,
+          paste0("Records by Model Prediction. Cutoff >=", optcut),
+          line = 0.75,
+          cex = 1
+        )
+        mtext(
+          side = 1,
+          "Model Prediction",
+          line = 3,
+          cex = 1,
+          font = 2
+        )
+        abline(h = 0) # Horizontal line
+        text(
+          x = bpmodel,
+          y = t(cmnbrplot),
+          label = t(cmnbrplot),
+          pos = 3,
+          cex = 1
+        )
+      }
 
-    # CM Numbers, where X-axis is model prediction
-    if (plot == "cmmodelrates") {
-      cmpctmodelplot = cmpctmodel
-      colnames(cmpctmodelplot) = c("Model+\n[ PPV | FDR ]", "Model-\n[ FOR | NPV ]") # Actuals
-      rownames(cmpctmodelplot) = c("Actual+", "Actual-") # Model
-      bpactualpct =
-        barplot(
-          cmpctmodelplot,
-          ylim = c(0, 1),
-          col = c("grey50", "grey85"),
-          beside = T,
-          axes = T,
-          border = NA,
-          legend.text = T,
-          args.legend = list(
-            x = "top",
+      # CM Numbers, where X-axis is model prediction
+      if (plot == "cmmodelrates") {
+        cmpctmodelplot = cmpctmodel
+        colnames(cmpctmodelplot) = c("Model+\n[ PPV | FDR ]", "Model-\n[ FOR | NPV ]") # Actuals
+        rownames(cmpctmodelplot) = c("Actual+", "Actual-") # Model
+        bpactualpct =
+          barplot(
+            cmpctmodelplot,
+            ylim = c(0, 1),
+            col = c("grey50", "grey85"),
+            beside = T,
+            axes = T,
             border = NA,
-            bty = "n",
-            horiz = F
+            legend.text = T,
+            args.legend = list(
+              x = "top",
+              border = NA,
+              bty = "n",
+              horiz = F
+            )
           )
+        mtext(
+          side = 3,
+          "Classification Matrix",
+          line = 2,
+          cex = 1.2,
+          font = 2
         )
-      mtext(
-        side = 3,
-        "Classification Matrix",
-        line = 2,
-        cex = 1.2,
-        font = 2
-      )
-      mtext(
-        side = 3,
-        paste0("Percentage by Model Prediction. Cutoff >=", optcut),
-        line = 0.75,
-        cex = 1
-      )
-      mtext(
-        side = 1,
-        "Model Prediction",
-        line = 3,
-        cex = 1,
-        font = 2
-      )
-      abline(h = 0) # Horizontal line
-      text(
-        x = bpactualpct,
-        y = cmpctmodelplot,
-        label = round(cmpctmodelplot, 4),
-        pos = 3,
-        cex = 1
-      )
-    }
+        mtext(
+          side = 3,
+          paste0("Percentage by Model Prediction. Cutoff >=", optcut),
+          line = 0.75,
+          cex = 1
+        )
+        mtext(
+          side = 1,
+          "Model Prediction",
+          line = 3,
+          cex = 1,
+          font = 2
+        )
+        abline(h = 0) # Horizontal line
+        text(
+          x = bpactualpct,
+          y = cmpctmodelplot,
+          label = round(cmpctmodelplot, 4),
+          pos = 3,
+          cex = 1
+        )
+      }
 
-  } # end else
-}
+    } # end else
+  }
 
 # End: Metrics Plot 20171022
 
@@ -2460,7 +2459,7 @@ smbinning.psi <- function(df, y, x) {
 
     psimg = rbind(psimg, PSI = colSums(psimg))
     psimg = as.table(psimg) # Table with Mg PSI
-    psitable = psimg[nrow(psimg), ] # Extract total PSI only
+    psitable = psimg[nrow(psimg),] # Extract total PSI only
     psitable = as.data.frame(psitable)
     # Plot
     psitable$Partition = rownames(psitable) # Create column "Partition"
@@ -2561,9 +2560,9 @@ smbinning.psi <- function(df, y, x) {
 #' smbinning.scoring.sql(smbscaled)
 #' @export
 smbinning.scaling <- function(logitraw,
-                             pdo = 20,
-                             score = 720,
-                             odds = 99) {
+                              pdo = 20,
+                              score = 720,
+                              odds = 99) {
   if (missing(logitraw)) {
     return(stop("Logistic model missing"))
   }
@@ -2664,7 +2663,7 @@ smbinning.scaling <- function(logitraw,
     FullName = unlist(chrbinname)
     FullName = c("(Intercept)", FullName)
     bincoeff$FullName = factor(bincoeff$FullName, levels = FullName)
-    bincoeff = bincoeff[order(bincoeff$FullName), ]
+    bincoeff = bincoeff[order(bincoeff$FullName),]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -2692,7 +2691,7 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts = bincoeff
     chrpts = chrpts[, c("Characteristic", "Points")]
-    chrpts = chrpts[-1, ] # Remove (intercept)
+    chrpts = chrpts[-1,] # Remove (intercept)
     minmaxscore = c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
                     sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
 
@@ -2769,7 +2768,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df = within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                      chrattptstmp[j, ][3])
+                      chrattptstmp[j,][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp = as.numeric(df$chrtmp)
@@ -2829,7 +2828,7 @@ smbinning.scoring.sql <- function (smbscaled) {
     logitscaled = smbscaled$logitscaled
     # SQL code 1: Create table
     logitscaleddf = data.frame(logitscaled)
-    logitscaleddf = logitscaleddf[-1, ] # Remove (intercept)
+    logitscaleddf = logitscaleddf[-1,] # Remove (intercept)
     uniquechctrs = unique(logitscaleddf$Characteristic) # Characteristics
     codecreate = list()
     codecreate = c(codecreate,
@@ -3135,7 +3134,7 @@ smbinning.sumiv <- function(df, y) {
   }
   close(pb)
   options(warn = 0) # Turn back on warnings
-  sumivt = sumivt[with(sumivt, order(-IV)), ]
+  sumivt = sumivt[with(sumivt, order(-IV)),]
   cat("", "\n")
   return(sumivt)
 }
@@ -3164,8 +3163,8 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     return("Not from smbinning.sumiv")
   }
   sumivtplot = sumivt
-  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV), ]
-  sumivtplot = sumivtplot[order(sumivtplot$IV), ]
+  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV),]
+  sumivtplot = sumivtplot[order(sumivtplot$IV),]
   sumivtplot = cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
@@ -3272,4 +3271,3 @@ NULL
 #' @name smbsimdf3
 NULL
 # End: Model Ranking Sample Data
-
