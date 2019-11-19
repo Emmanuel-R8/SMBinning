@@ -29,12 +29,13 @@
 #' result$ctree # Decision tree
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
+
   # Check data frame and formats
   tryCatch({
     assertthat::assert_that(is.data.frame(df))
   },
   error = function(e) {
-    message("Data df not a data.frame")
+    message("Data df not a dataframe.")
     return(NA)
   })
 
@@ -55,7 +56,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assertthat::assertthat::assert_that(str_detect(x, "\\.") == FALSE)
+    assertthat::assert_that(str_detect(x, "\\.") == FALSE)
   },   error = function(e) {
     message("x cannot contain a dot.")
     return(NA)
@@ -77,18 +78,18 @@ smbinning <- function(df, y, x, p = 0.05) {
     return(NA)
   })
 
-  i = which(names(df) == y) # Find Column for dependant
+  y_col = which(names(df) == y) # Find Column for dependant
   tryCatch({
-    assertthat::assert_that(i != 0)
+    assertthat::assert_that(y_col != 0)
   },
   error = function(e) {
     message("Cannot find field y.")
     return(NA)
   })
 
-  j = which(names(df) == x) # Find Column for independant
+  x_col = which(names(df) == x) # Find Column for independant
   tryCatch({
-    assertthat::assert_that(j != 0)
+    assertthat::assert_that(x_col != 0)
   },
   error = function(e) {
     message("Cannot find field x.")
@@ -97,7 +98,7 @@ smbinning <- function(df, y, x, p = 0.05) {
 
 
   tryCatch({
-    assertthat::assert_that(is.numeric(df[, i]))
+    assertthat::assert_that(is.numeric(df[, y_col]))
   },
   error = function(e) {
     message("Field y must be numeric.")
@@ -105,14 +106,14 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assertthat::assert_that(is.numeric(df[, j]))
+    assertthat::assert_that(is.numeric(df[, x_col]))
   },   error = function(e) {
     message("Field x must be numeric.")
     return(NA)
   })
 
   tryCatch({
-    assertthat::assert_that(max(df[, i], na.rm = TRUE) == 1)
+    assertthat::assert_that(max(df[, y_col], na.rm = TRUE) == 1)
   },
   error = function(e) {
     message("Maximum of y must be 1.")
@@ -120,7 +121,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assertthat::assert_that(min(df[, i], na.rm = TRUE) == 0)
+    assertthat::assert_that(min(df[, y_col], na.rm = TRUE) == 0)
   },
   error = function(e) {
     message("Minimum of y must be 0.")
@@ -128,7 +129,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assertthat::assert_that(length(unique(df[, j])) >= 5)
+    assertthat::assert_that(length(unique(df[, x_col])) >= 5)
   },
   error = function(e) {
     message("x must have at least 5 uniques values.")
@@ -152,7 +153,8 @@ smbinning <- function(df, y, x, p = 0.05) {
       formula(paste(y, "~", x)),
       data = df,
       na.action = na.exclude,
-      control = ctree_control(minbucket = ceiling(round(p * nrow(
+      control = ctree_control(minbucket = ceiling(round(p *
+                                                          nrow(
         df
       ))))
     )
@@ -163,10 +165,10 @@ smbinning <- function(df, y, x, p = 0.05) {
     # Append cutpoinstop()ts in a table (Automated)
     cutvct = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
     n = length(ctree) # Number of nodes
-    for (i in 1:n) {
-      cutvct = rbind(cutvct, ctree[i]$node$split$breaks)
+    for (y_col in 1:n) {
+      cutvct = rbind(cutvct, ctree[y_col]$node$split$breaks)
     }
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -175,8 +177,8 @@ smbinning <- function(df, y, x, p = 0.05) {
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
     n = length(cutvct) # Number of cutpoits
-    for (i in 1:n) {
-      cutpoint = cutvct[i]
+    for (y_col in 1:n) {
+      cutpoint = cutvct[y_col]
       ivt = rbind(
         ivt,
         fn$sqldf(
@@ -198,12 +200,12 @@ smbinning <- function(df, y, x, p = 0.05) {
         )
       )
     }
-    cutpoint = max(df[, j], na.rm = T) # Calculte Max without Missing
+    cutpoint = max(df[, x_col], na.rm = T) # Calculte Max without Missing
     cutpoint = ifelse(cutpoint < 0,
                       trunc(10000 * cutpoint) / 10000,
                       ceiling(10000 * cutpoint) / 10000) # Round to 4 dec. to avoid borderline cases
     maxcutpoint = max(cutvct) # Calculte Max cut point
-    mincutpoint = min(df[, j], na.rm = T) # Calculte Min without Missing for later usage
+    mincutpoint = min(df[, x_col], na.rm = T) # Calculte Min without Missing for later usage
     mincutpoint = ifelse(
       mincutpoint < 0,
       trunc(10000 * mincutpoint) / 10000,
@@ -285,8 +287,8 @@ smbinning <- function(df, y, x, p = 0.05) {
     # Covert to table numeric
     options(warn = -1)
     ncol = ncol(ivt)
-    for (i in 2:ncol) {
-      ivt[, i] = as.numeric(ivt[, i])
+    for (y_col in 2:ncol) {
+      ivt[, y_col] = as.numeric(ivt[, y_col])
     }
     options(warn = 0)
 
@@ -297,10 +299,10 @@ smbinning <- function(df, y, x, p = 0.05) {
 
     # From 2nd row
     n = nrow(ivt) - 2
-    for (i in 2:n) {
-      ivt[i, 2] = ivt[i, 5] - ivt[i - 1, 5]
-      ivt[i, 3] = ivt[i, 6] - ivt[i - 1, 6]
-      ivt[i, 4] = ivt[i, 7] - ivt[i - 1, 7]
+    for (y_col in 2:n) {
+      ivt[y_col, 2] = ivt[y_col, 5] - ivt[y_col - 1, 5]
+      ivt[y_col, 3] = ivt[y_col, 6] - ivt[y_col - 1, 6]
+      ivt[y_col, 4] = ivt[y_col, 7] - ivt[y_col - 1, 7]
     }
 
     ivt[2, 2] = ivt[2, 5] - ivt[1, 5]
@@ -308,25 +310,25 @@ smbinning <- function(df, y, x, p = 0.05) {
     ivt[2, 4] = ivt[2, 7] - ivt[1, 7]
 
     # Missing row.  Update: Added "if" statement
-    ivt[i + 1, 5] = ivt[i, 5] + ivt[i + 1, 2]
-    ivt[i + 1, 6] = ivt[i, 6] + ivt[i + 1, 3]
-    ivt[i + 1, 7] = ivt[i, 7] + ivt[i + 1, 4]
+    ivt[y_col + 1, 5] = ivt[y_col, 5] + ivt[y_col + 1, 2]
+    ivt[y_col + 1, 6] = ivt[y_col, 6] + ivt[y_col + 1, 3]
+    ivt[y_col + 1, 7] = ivt[y_col, 7] + ivt[y_col + 1, 4]
 
     # Calculating metrics
     options(scipen = 999) # Remove Scientific Notation
-    ivt[, 8] = round(ivt[, 2] / ivt[i + 2, 2], 4) # PctRec
+    ivt[, 8] = round(ivt[, 2] / ivt[y_col + 2, 2], 4) # PctRec
     ivt[, 9] = round(ivt[, 3] / ivt[, 2], 4) # GoodRate
     ivt[, 10] = round(ivt[, 4] / ivt[, 2], 4) # BadRate
     ivt[, 11] = round(ivt[, 3] / ivt[, 4], 4) # Odds
     ivt[, 12] = round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
-    G = ivt[i + 2, 3]
-    B = ivt[i + 2, 4]
+    G = ivt[y_col + 2, 3]
+    B = ivt[y_col + 2, 4]
     LnGB = log(G / B) # IV Part 1
     ivt[, 13] = round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
     ivt[, 14] = round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
     # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
     # Calculates Information Value even with undefined numbers
-    ivt[i + 2, 14] = 0.0000
+    ivt[y_col + 2, 14] = 0.0000
     for (k in 1:(nrow(ivt) - 1))
     {
       if (is.finite(ivt[k, 14])) {
@@ -334,9 +336,9 @@ smbinning <- function(df, y, x, p = 0.05) {
       } else {
         mgiv = 0.0000
       }
-      ivt[i + 2, 14] = ivt[i + 2, 14] + mgiv
+      ivt[y_col + 2, 14] = ivt[y_col + 2, 14] + mgiv
     }
-    iv = ivt[i + 2, 14]
+    iv = ivt[y_col + 2, 14]
     # End Inf. Value Table
   }
   bands = append(mincutpoint, cutvct)
@@ -347,7 +349,7 @@ smbinning <- function(df, y, x, p = 0.05) {
     ctree = ctree,
     bands = bands,
     x = x,
-    col_id = j,
+    col_id = x_col,
     cuts = cutvct
   )
 }
@@ -421,7 +423,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     for (i in 1:n) {
       cutvct = rbind(cutvct, cuts[i])
     }
-    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
     cutvct = ifelse(cutvct < 0,
                     trunc(10000 * cutvct) / 10000,
                     ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -642,10 +644,14 @@ smbinning.custom <- function(df, y, x, cuts) {
 #' @export
 smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   # Check data frame and formats
-  if (!is.data.frame(df)) {
-    # Check if data.frame
-    return("Data not a data.frame")
-  }
+  tryCatch({
+    assertthat::assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a dataframe.")
+    return(NA)
+  })
+
   ncol = ncol(df)
   nrow = nrow(df)
   r = rounding
@@ -839,7 +845,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       cutvct = rbind(cutvct, cuts[i])
     }
 
-    cutvct = cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct = cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
     # Build Information Value Table
     # Counts per not missing cutpoint
     ivt = data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -1018,11 +1024,16 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 #' @export
 smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
-  if (!is.data.frame(df)) {
-    # Check if data.frame
-    return("Data not a data.frame")
-  } else if (is.numeric(y) |
-             is.numeric(x)) {
+  tryCatch({
+    assertthat::assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a dataframe.")
+    return(NA)
+  })
+
+  if (is.numeric(y) |
+      is.numeric(x)) {
     # Check if target vable is numeric
     return("Column name not string")
   } else if (grepl("[.]", y) |
@@ -1417,8 +1428,8 @@ smbinning.logitrank <- function(y, chr, df) {
       atttmp = v[j, 1]
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp = paste0(ftmp, paste0("+", c(v[j,])[i]))
-          atttmp = paste0(atttmp, paste0("+", c(v[j,])[i]))
+          ftmp = paste0(ftmp, paste0("+", c(v[j, ])[i]))
+          atttmp = paste0(atttmp, paste0("+", c(v[j, ])[i]))
         } # End columns
       } # End if more than 1 column
       fnext = c(ftmp, fnext)
@@ -1440,7 +1451,7 @@ smbinning.logitrank <- function(y, chr, df) {
   colnames(chrsum) = c("Characteristics", "AIC", "Deviance")
   chrsum$AIC = as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance = as.numeric(as.character(chrsum$Deviance))
-  chrsum = chrsum[order(chrsum$AIC),]
+  chrsum = chrsum[order(chrsum$AIC), ]
 
   return(chrsum)
 }
@@ -1493,10 +1504,16 @@ smbinning.metrics <- function(dataset,
                               returndf = 0) {
   i = which(names(dataset) == actualclass) # Find Column for actualclass
   j = which(names(dataset) == prediction) # Find Column for prediction
-  if (!is.data.frame(dataset)) {
-    # Check if data.frame
-    return("Data not a data.frame.")
-  } else if (!is.na(cutoff) & !is.numeric(cutoff)) {
+
+  tryCatch({
+    assertthat::assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a dataframe.")
+    return(NA)
+  })
+
+  if (!is.na(cutoff) & !is.numeric(cutoff)) {
     return("'cutoff' must be numeric.")
   } else if (!is.numeric(dataset[, which(names(dataset) == prediction)])) {
     return("'prediction' not found.")
@@ -1606,7 +1623,7 @@ smbinning.metrics <- function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+    optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
     df$YoudenJ = NULL
     optcutcomment = " (Optimal)"
 
@@ -1650,9 +1667,9 @@ smbinning.metrics <- function(dataset,
     # KS
     df$MgKS = abs(df$PctCumAscGood - df$PctCumAscBad)
     ks = as.numeric(max(df$MgKS))
-    scoreks = as.numeric(df[df$MgKS == ks, ]$Prediction)
-    cgks = as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
-    cbks = as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
+    scoreks = as.numeric(df[df$MgKS == ks,]$Prediction)
+    cgks = as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
+    cbks = as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
     df$MgKS = NULL
 
     # KS Evaluation
@@ -1670,15 +1687,15 @@ smbinning.metrics <- function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut, ]$CumDescGood
-      fp = df[df$Prediction == optcut, ]$CumDescBad
-      fn = df[df$Prediction == optcut, ]$FN
-      tn = df[df$Prediction == optcut, ]$TN
+      tp = df[df$Prediction == optcut,]$CumDescGood
+      fp = df[df$Prediction == optcut,]$CumDescBad
+      fn = df[df$Prediction == optcut,]$FN
+      tn = df[df$Prediction == optcut,]$TN
       p = SumGoods
       n = SumBads
-      recsabovecutoff = df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
-      goodrate = df[df$Prediction == optcut, ]$GoodRateDesc
-      badrate = df[df$Prediction == optcut, ]$BadRateDesc
+      recsabovecutoff = df[df$Prediction == optcut,]$CumDescTotal / SumRecords
+      goodrate = df[df$Prediction == optcut,]$GoodRateDesc
+      badrate = df[df$Prediction == optcut,]$BadRateDesc
 
       # Report on Metrics
       admetrics = character()
@@ -1894,23 +1911,25 @@ smbinning.metrics.plot <-
   function(df, cutoff = NA, plot = "cmactual") {
     if (names(df)[1] != "Prediction" | names(df)[2] != "CntGood") {
       return("Data not from smbinning.metrics.")
-    } else if (!is.na(cutoff) &
-               !is.numeric(cutoff)) {
+
+    } else if (!is.na(cutoff) & !is.numeric(cutoff)) {
       # Check if target variable is numeric
       return("'cutoff' must be numeric.")
+
     } else if (!is.na(cutoff) &
                (max(df$Prediction) < cutoff |
                 min(df$Prediction) > cutoff)) {
       # Check if target variable is numeric
       return("'cutoff' out of range.")
+
     } else if (plot != "cmactual" &
                plot != "cmactualrates" & plot != "cmmodel" &
                plot != "cmmodelrates") {
       return("'plot' options are: 'auc', 'ks' or 'none'.")
-    }
-    else {
+
+    } else {
       df$YoudenJ = df$Sensitivity + df$Specificity - 1
-      optcut = df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
+      optcut = df[df$YoudenJ == max(df$YoudenJ),]$Prediction
       df$YoudenJ = NULL
 
       # If cutoff is specified
@@ -1924,10 +1943,10 @@ smbinning.metrics.plot <-
 
 
       # Confusion Matrix Components
-      tp = df[df$Prediction == optcut, ]$CumDescGood
-      fp = df[df$Prediction == optcut, ]$CumDescBad
-      fn = df[df$Prediction == optcut, ]$FN
-      tn = df[df$Prediction == optcut, ]$TN
+      tp = df[df$Prediction == optcut,]$CumDescGood
+      fp = df[df$Prediction == optcut,]$CumDescBad
+      fn = df[df$Prediction == optcut,]$FN
+      tn = df[df$Prediction == optcut,]$TN
 
       p = sum(df$CntGood)
       n = sum(df$CntBad)
@@ -2308,6 +2327,7 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 #' @export
 smbinning.plot <- function(ivout, option = "dist", sub = "") {
   r = ifelse(ivout$ivtable[nrow(ivout$ivtable) - 1, 2] == 0, 2, 1)
+
   if (option == "dist") {
     # Distribution
     x_upper = nrow(ivout$ivtable) - r
@@ -2422,10 +2442,16 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
 smbinning.psi <- function(df, y, x) {
   i = which(names(df) == x)
   j = which(names(df) == y)
-  if (!is.data.frame(df)) {
-    return(stop("Not a data frame"))
-  }
-  else if (identical(i, integer(0))) {
+
+  tryCatch({
+    assertthat::assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a dataframe.")
+    return(NA)
+  })
+
+  if (identical(i, integer(0))) {
     return(stop(paste("Characteristic", x, "not found")))
   }
   else if (identical(j, integer(0))) {
@@ -2459,7 +2485,7 @@ smbinning.psi <- function(df, y, x) {
 
     psimg = rbind(psimg, PSI = colSums(psimg))
     psimg = as.table(psimg) # Table with Mg PSI
-    psitable = psimg[nrow(psimg),] # Extract total PSI only
+    psitable = psimg[nrow(psimg), ] # Extract total PSI only
     psitable = as.data.frame(psitable)
     # Plot
     psitable$Partition = rownames(psitable) # Create column "Partition"
@@ -2564,7 +2590,7 @@ smbinning.scaling <- function(logitraw,
                               score = 720,
                               odds = 99) {
   if (missing(logitraw)) {
-    return(stop("Logistic model missing"))
+    return(stop("Logistic model missing."))
   }
   else if (as.character(summary(logitraw)[1]$call)[1] != "glm") {
     return(stop("Logistic model must be glm"))
@@ -2663,7 +2689,7 @@ smbinning.scaling <- function(logitraw,
     FullName = unlist(chrbinname)
     FullName = c("(Intercept)", FullName)
     bincoeff$FullName = factor(bincoeff$FullName, levels = FullName)
-    bincoeff = bincoeff[order(bincoeff$FullName),]
+    bincoeff = bincoeff[order(bincoeff$FullName), ]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -2691,7 +2717,7 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts = bincoeff
     chrpts = chrpts[, c("Characteristic", "Points")]
-    chrpts = chrpts[-1,] # Remove (intercept)
+    chrpts = chrpts[-1, ] # Remove (intercept)
     minmaxscore = c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
                     sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
 
@@ -2768,7 +2794,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df = within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                      chrattptstmp[j,][3])
+                      chrattptstmp[j, ][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp = as.numeric(df$chrtmp)
@@ -2817,18 +2843,18 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
 #' @param smbscaled Object generated using \code{smbinning.scaling}.
 #' @return The command \code{smbinning.scoring.sql} generates a SQL code to implement the model the model in SQL.
 #' @export
-smbinning.scoring.sql <- function (smbscaled) {
+smbinning.scoring.sql <- function(smbscaled) {
   if (missing(smbscaled)) {
     return(stop("Argument 'smbscaled' is missing"))
-  }
-  else if (names(smbscaled)[1] != "logitscaled") {
+
+  } else if (names(smbscaled)[1] != "logitscaled") {
     return(stop("'smbscaled' must come from 'smbinning.scaling'"))
-  }
-  else {
+
+  } else {
     logitscaled = smbscaled$logitscaled
     # SQL code 1: Create table
     logitscaleddf = data.frame(logitscaled)
-    logitscaleddf = logitscaleddf[-1,] # Remove (intercept)
+    logitscaleddf = logitscaleddf[-1, ] # Remove (intercept)
     uniquechctrs = unique(logitscaleddf$Characteristic) # Characteristics
     codecreate = list()
     codecreate = c(codecreate,
@@ -3054,10 +3080,14 @@ smbinning.sql <- function(ivout) {
 #' @export
 smbinning.sumiv <- function(df, y) {
   # Check data frame and formats
-  if (!is.data.frame(df)) {
-    # Check if data.frame
-    return("Data not a data.frame")
-  }
+  tryCatch({
+    assertthat::assert_that(is.data.frame(df))
+  },
+  error = function(e) {
+    message("Data df not a dataframe.")
+    return(NA)
+  })
+
   ncol = ncol(df)
   sumivt = data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
   options(warn = -1) # Turn off warnings
@@ -3134,7 +3164,7 @@ smbinning.sumiv <- function(df, y) {
   }
   close(pb)
   options(warn = 0) # Turn back on warnings
-  sumivt = sumivt[with(sumivt, order(-IV)),]
+  sumivt = sumivt[with(sumivt, order(-IV)), ]
   cat("", "\n")
   return(sumivt)
 }
@@ -3155,16 +3185,22 @@ smbinning.sumiv <- function(df, y) {
 #' for each numeric and factor characteristic in the dataset.
 #' @export
 smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
-  if (!is.data.frame(sumivt)) {
-    # Check if data.frame
-    return("Data not a data.frame")
-  } else if (names(sumivt[1]) != "Char" |
-             names(sumivt[2]) != "IV") {
+  # Check sumivt is a dataframe
+  tryCatch({
+    assertthat::assert_that(is.data.frame(sumivt))
+  },
+  error = function(e) {
+    message("Data sumivt not a dataframe.")
+    return(NA)
+  })
+
+  if (names(sumivt[1]) != "Char" |
+      names(sumivt[2]) != "IV") {
     return("Not from smbinning.sumiv")
   }
   sumivtplot = sumivt
-  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV),]
-  sumivtplot = sumivtplot[order(sumivtplot$IV),]
+  sumivtplot = sumivtplot[complete.cases(sumivtplot$IV), ]
+  sumivtplot = sumivtplot[order(sumivtplot$IV), ]
   sumivtplot = cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
@@ -3192,7 +3228,6 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     cex = cex
   )
 }
-
 # End Plot Summary IV 20160602
 
 
