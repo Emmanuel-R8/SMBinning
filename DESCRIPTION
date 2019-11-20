@@ -13,6 +13,8 @@ Description: A set of functions to build a scoring model from beginning to end, 
     The package also incorporates monotonic and customized binning, scaling capabilities that 
     transforms logistic coefficients into points for a better business understanding and 
     calculates and visualizes classic performance metrics of a classification model.
+Depends:
+    R (>= 2.10)
 Imports:
     tcltk,
     stats,

@@ -32,7 +32,6 @@
 #' result$ctree # Decision tree
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
-
   require(assertthat)
   require(gsubfn)
   require(partykit)
@@ -346,15 +345,18 @@ smbinning.custom <- function(df, y, x, cuts) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE)
   tryCatch({
-    assertthat::msg == ""
+    msg == ""
   },
   error = function(e) {
     message(msg)
     return(NA)
   })
 
-  i <- which(names(df) == y) # Find Column for dependant
-  j <- which(names(df) == x) # Find Column for independant
+  # Find Column for independant
+  col_x <- which(names(df) == x)
+
+  # Find Column for dependant
+  col_y  <- which(names(df) == y)
 
   # Append cutpoints in a table (Automated)
   cutvct <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -362,8 +364,8 @@ smbinning.custom <- function(df, y, x, cuts) {
   if (n < 1) {
     return("No Bins")
   } # At least 1 cutpoint
-  for (i in 1:n) {
-    cutvct <- rbind(cutvct, cuts[i])
+  for (row_i  in 1:n) {
+    cutvct <- rbind(cutvct, cuts[row_i])
   }
   cutvct <-
     cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
@@ -374,8 +376,8 @@ smbinning.custom <- function(df, y, x, cuts) {
   # Counts per not missing cutpoint
   ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
   n <- length(cutvct) # Number of cutpoits
-  for (i in 1:n) {
-    cutpoint <- cutvct[i]
+  for (row_i  in 1:n) {
+    cutpoint <- cutvct[row_i]
     ivt <- rbind(
       ivt,
       fn$sqldf(
@@ -397,19 +399,27 @@ smbinning.custom <- function(df, y, x, cuts) {
       )
     )
   }
-  cutpoint <-
-    max(df[, j], na.rm = TRUE) # Calculte Max without Missing
+
+  # Calculte Max without Missing
+  cutpoint <- max(df[, col_x], na.rm = TRUE)
+
+  # Round to 4 dec. to avoid borderline cases
   cutpoint <- ifelse(cutpoint < 0,
                      trunc(10000 * cutpoint) / 10000,
-                     ceiling(10000 * cutpoint) / 10000) # Round to 4 dec. to avoid borderline cases
-  maxcutpoint <- max(cutvct) # Calculte Max cut point
-  mincutpoint <-
-    min(df[, j], na.rm = TRUE) # Calculte Min without Missing for later usage
+                     ceiling(10000 * cutpoint) / 10000)
+
+  # Calculate Max cut point
+  maxcutpoint <- max(cutvct)
+
+  # Calculate Min without Missing for later usage
+  mincutpoint <- min(df[, col_x], na.rm = TRUE)
+
+  # Round to 4 dec. to avoid borderline cases
   mincutpoint <- ifelse(
     mincutpoint < 0,
     trunc(10000 * mincutpoint) / 10000,
     ceiling(10000 * mincutpoint) / 10000
-  ) # Round to 4 dec. to avoid borderline cases
+  )
   ivt <- rbind(
     ivt,
     fn$sqldf(
@@ -430,6 +440,7 @@ smbinning.custom <- function(df, y, x, cuts) {
                 from df where $x is not NULL and $y is not NULL"
     )
   )
+
   # Missing Data
   x.na <- fn$sqldf("select count(*) from df where $x is null")
   y.na <- fn$sqldf("select count(*) from df where $y is null")
@@ -458,6 +469,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     ivt <- rbind(ivt,
                  c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
   }
+
   # Total
   ivt <- rbind(
     ivt,
@@ -483,22 +495,27 @@ smbinning.custom <- function(df, y, x, cuts) {
   # Covert to table numeric
   options(warn = -1)
   ncol <- ncol(ivt)
-  for (i in 2:ncol) {
-    ivt[, i] <- as.numeric(ivt[, i])
+  for (col_y  in 2:ncol) {
+    ivt[, col_y] <- as.numeric(ivt[, col_y])
   }
   options(warn = 0)
 
   # Complete Table
-  ivt[1, 2] <- ivt[1, 5] # Nbr Records
-  ivt[1, 3] <- ivt[1, 6] # Nbr Goods
-  ivt[1, 4] <- ivt[1, 7] # Nbr Bads
+  # Nbr Records
+  ivt[1, 2] <- ivt[1, 5]
+
+  # Nbr Goods
+  ivt[1, 3] <- ivt[1, 6]
+
+  # Nbr Bads
+  ivt[1, 4] <- ivt[1, 7]
 
   # From 2nd row
   n <- nrow(ivt) - 2
-  for (i in 2:n) {
-    ivt[i, 2] <- ivt[i, 5] - ivt[i - 1, 5]
-    ivt[i, 3] <- ivt[i, 6] - ivt[i - 1, 6]
-    ivt[i, 4] <- ivt[i, 7] - ivt[i - 1, 7]
+  for (col_y  in 2:n) {
+    ivt[col_y , 2] <- ivt[col_y , 5] - ivt[col_y  - 1, 5]
+    ivt[col_y , 3] <- ivt[col_y , 6] - ivt[col_y  - 1, 6]
+    ivt[col_y , 4] <- ivt[col_y , 7] - ivt[col_y  - 1, 7]
   }
 
   ivt[2, 2] <- ivt[2, 5] - ivt[1, 5]
@@ -506,36 +523,53 @@ smbinning.custom <- function(df, y, x, cuts) {
   ivt[2, 4] <- ivt[2, 7] - ivt[1, 7]
 
   # Missing row
-  ivt[i + 1, 5] <- ivt[i, 5] + ivt[i + 1, 2]
-  ivt[i + 1, 6] <- ivt[i, 6] + ivt[i + 1, 3]
-  ivt[i + 1, 7] <- ivt[i, 7] + ivt[i + 1, 4]
+  ivt[col_y  + 1, 5] <- ivt[col_y , 5] + ivt[col_y  + 1, 2]
+  ivt[col_y  + 1, 6] <- ivt[col_y , 6] + ivt[col_y  + 1, 3]
+  ivt[col_y  + 1, 7] <- ivt[col_y , 7] + ivt[col_y  + 1, 4]
 
   # Calculating metrics
-  options(scipen = 999) # Remove Scientific Notation
-  ivt[, 8] <- round(ivt[, 2] / ivt[i + 2, 2], 4) # PctRec
-  ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
-  ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
-  ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4) # Odds
-  ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4) # LnOdds
-  G <- ivt[i + 2, 3]
-  B <- ivt[i + 2, 4]
-  LnGB <- log(G / B) # IV Part 1
-  ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4) # WoE
-  ivt[, 14] <-
-    round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4) # Mg IV
+  # Remove Scientific Notation
+  options(scipen = 999)
+
+  # PctRec
+  ivt[, 8] <- round(ivt[, 2] / ivt[col_y  + 2, 2], 4)
+
+  # GoodRate
+  ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4)
+
+  # BadRate
+  ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4)
+
+  # Odds
+  ivt[, 11] <- round(ivt[, 3] / ivt[, 4], 4)
+
+  # LnOdds
+  ivt[, 12] <- round(log(ivt[, 3] / ivt[, 4]), 4)
+  G <- ivt[col_y  + 2, 3]
+  B <- ivt[col_y  + 2, 4]
+
+  # IV Part 1
+  LnGB <- log(G / B)
+
+  # WoE
+  ivt[, 13] <- round(log(ivt[, 3] / ivt[, 4]) - LnGB, 4)
+
+  # Mg IV
+  ivt[, 14] <- round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4)
+
   # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+
   # Calculates Information Value even with undefined numbers
-  ivt[i + 2, 14] <- 0.0000
-  for (k in 1:(nrow(ivt) - 1))
-  {
+  ivt[col_y  + 2, 14] <- 0.0000
+  for (k in 1:(nrow(ivt) - 1)) {
     if (is.finite(ivt[k, 14])) {
       mgiv <- ivt[k, 14]
     } else {
       mgiv <- 0.0000
     }
-    ivt[i + 2, 14] <- ivt[i + 2, 14] + mgiv
+    ivt[col_y  + 2, 14] <- ivt[col_y  + 2, 14] + mgiv
   }
-  iv <- ivt[i + 2, 14]
+  iv <- ivt[col_y  + 2, 14]
   # End Inf. Value Table
 
   bands <- append(mincutpoint, cutvct)
@@ -545,12 +579,11 @@ smbinning.custom <- function(df, y, x, cuts) {
     iv = iv,
     bands = bands,
     x = x,
-    col_id = j,
+    col_id = col_x,
     cuts = cutvct
   )
 }
 # End Custom Cutpoints
-
 
 
 
@@ -583,7 +616,6 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
   ncol <- ncol(df)
   col_id <- ivout$col_id
 
-  # Updated 20160130
   b <- ivout$bands
   df[, ncol][is.na(df[, col_id])] <- 0 # Missing
   df[, ncol][df[, col_id] <= b[2]] <- 1 # First valid
@@ -594,11 +626,14 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
       df[, ncol][df[, col_id] > b[i] & df[, col_id] <= b[i + 1]] <- i
     }
   }
-  df[, ncol][df[, col_id] > b[length(b) - 1]] <-
-    length(b) - 1 # Last
-  df[, ncol] <-
-    as.factor(df[, ncol]) # Convert to factor for modeling
+
+  # Last
+  df[, ncol][df[, col_id] > b[length(b) - 1]] <- length(b) - 1
+
+  # Convert to factor for modeling
+  df[, ncol] <- as.factor(df[, ncol])
   blab <- c(paste("01 <=", b[2]))
+
   if (length(b) > 3) {
     for (i in 3:(length(b) - 1)) {
       blab <- c(blab, paste(sprintf("%02d", i - 1), "<=", b[i]))
@@ -612,24 +647,20 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
 
   # If for any reason #bins in test sample are different, error
   if (any(is.na(df[, col_id])) == F &
-      length(blab) > length(unique(df[, ncol])))
-  {
+      length(blab) > length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )
   }
 
   if (any(is.na(df[, col_id])) == TRUE &
-      length(blab) >= length(unique(df[, ncol])))
-  {
+      length(blab) >= length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )
   }
 
   # Are there ANY missing values
-  # any(is.na(df[,col_id]))
-
   if (any(is.na(df[, col_id]))) {
     blab <- c("00 Miss", blab)
   }

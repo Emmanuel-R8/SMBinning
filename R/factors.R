@@ -255,7 +255,7 @@ smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE)
   tryCatch({
-    assertthat::msg == ""
+    msg == ""
   },
   error = function(e) {
     message(msg)
