@@ -28,7 +28,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   require(sqldf)
 
   # Check data frame and formats
-  msg <- haveParametersError(df, x, y, xIsFactor = TRUE, ...)
+  msg <- haveParametersError(df, x, y, xIsFactor = TRUE, maxcat = maxcat)
   tryCatch({
     assert_that(msg == "")
   },

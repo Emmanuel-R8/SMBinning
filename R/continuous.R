@@ -30,14 +30,14 @@
 #' result$bands # Bins or bands
 #' result$ctree # Decision tree
 #' @export
-smbinning <- function(df, y, x, p = 0.05) {
+smbinning <- function(df, y, x, p = p) {
   require(assertthat)
   require(gsubfn)
   require(partykit)
   require(sqldf)
 
   # Check data frame and formats
-  msg <- haveParametersError(df, x, y, xIsFactor = FALSE, ...)
+  msg <- haveParametersError(df, x, y, xIsFactor = FALSE, p = 0.05)
 
   tryCatch({
     assert_that(msg == "")
