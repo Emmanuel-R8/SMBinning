@@ -1,20 +1,20 @@
-haveParametersError <- function(df, x, y, xIsFactor = FALSE) {
+haveParametersError <- function(df, x, y, xIsFactor = FALSE, ...) {
   returnMsg <- ""
 
   # Check data frame and formats
   if (!is.data.frame(df)) {
     ReturnMsg <- "Data df is not a data.frame"
 
-  } else if (!is.string(x)) {
+  } else if (!assertthat::is.string(x)) {
     ReturnMsg <- "Variable x must be a string."
 
-  } else if (!is.string(y)) {
+  } else if (!assertthat::is.string(y)) {
     ReturnMsg <- "Variable y must be a string."
 
-  } else if (str_detect(x, "\\.") == TRUE) {
+  } else if (stringr::str_detect(x, "\\.") == TRUE) {
     ReturnMsg <- "Variable x cannot contain a dot [.]."
 
-  } else if (str_detect(y, "\\.") == TRUE) {
+  } else if (stringr::str_detect(y, "\\.") == TRUE) {
     ReturnMsg <- "Variable y cannot contain a dot [.]."
 
   } else {
@@ -30,13 +30,13 @@ haveParametersError <- function(df, x, y, xIsFactor = FALSE) {
     } else if (xIsFactor == TRUE & !is.factor(df[, col_x])) {
       ReturnMsg <- "Variable x is not categorical (factor)"
 
-    } else if (xIsFactor == TRUE & !between(length(levels(df[, col_x])), 2, maxcat)) {
+    } else if (xIsFactor == TRUE & !dplyr::between(length(levels(df[, col_x])), 2, maxcat)) {
       ReturnMsg <- "Variable x contains less than 2 or more than maxcat levels"
 
-    } else if (xIsFactor == TRUE & !between(length(levels(df[, col_x])), 2, maxcat)) {
+    } else if (xIsFactor == TRUE & !dplyr::between(length(levels(df[, col_x])), 2, maxcat)) {
       ReturnMsg <- "Variable x contains less than 2 or more than maxcat levels"
 
-    } else if (xIsFactor == TRUE & any(str_detect(df[, col_x], "\\,"))) {
+    } else if (xIsFactor == TRUE & any(stringr::str_detect(df[, col_x], "\\,"))) {
       ReturnMsg <- "Values in variable x cannot contain commas"
 
     } else if (col_y == 0) {

@@ -29,3 +29,13 @@ NeedsCompilation: no
 Packaged: 2019-04-01 10:23:23 UTC; hjopi
 Repository: CRAN
 Date/Publication: 2019-04-01 10:50:03 UTC
+Collate: 
+    'error_checking.R'
+    'continuous.R'
+    'factors.R'
+    'misc.R'
+    'plots.R'
+    'regression.R'
+    'regression_metrics.R'
+    'sql.R'
+    'summary.R'
