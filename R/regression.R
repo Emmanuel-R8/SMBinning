@@ -24,7 +24,7 @@
 #'   }
 #' @param df A data frame.
 #' @param rounding Optional parameter to define the decimal points shown in the output table. Default is 3.
-#' @param pbar Optional parameter that turns on or off a progress bar. Default value is 1.
+#' @param pbar Optional parameter that turns on or off a progress bar. Default value is TRUE.
 #' @return The command \code{smbinning.eda} generates two data frames that list each characteristic
 #' with basic statistics such as extreme values and quartiles;
 #' and also percentages of missing values and outliers, among others.
@@ -42,7 +42,7 @@
 #' smbinning.eda(smbsimdf1,
 #'               rounding = 3)$edapct
 #' @export
-smbinning.eda <- function(df, rounding = 3, pbar = 1) {
+smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
   # Check data frame and formats
   tryCatch({
     assert_that(is.data.frame(df) & !is_tibble(df))
@@ -55,10 +55,16 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   ncol <- ncol(df)
   nrow <- nrow(df)
   r <- rounding
-  eda <- data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
-  options(scipen = 999) # No scientific notation
-  options(warn = -1) # Turn off warnings
-  if (pbar == 1) {
+
+  # Empty table
+  eda <- data.frame(matrix(ncol = 0, nrow = 0))
+
+  # No scientific notation
+  options(scipen = 999)
+
+  # Turn off warnings
+  options(warn = -1)
+  if (pbar == TRUE) {
     cat("", "\n")
     pb <- txtProgressBar(
       min = 0,
@@ -69,6 +75,7 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
       width = 50
     )
   }
+
   for (i in 1:ncol) {
     # t1=round(Sys.time()-t0,2)
     Miss <- sum(is.na(df[, i]))
@@ -93,12 +100,9 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
           Q75 = round(q[4], r),
           Max = round(q[5], r),
           StDv = round(sd(df[, i], na.rm = TRUE), r),
-          Neg = nrow(subset(df, df[, i] < 0 &
-                              !is.na(df[, i]))),
-          Zero = nrow(subset(df, df[, i] == 0 &
-                               !is.na(df[, i]))),
-          Pos = nrow(subset(df, df[, i] > 0 &
-                              !is.na(df[, i]))),
+          Neg = nrow(subset(df, df[, i] < 0 & !is.na(df[, i]))),
+          Zero = nrow(subset(df, df[, i] == 0 & !is.na(df[, i]))),
+          Pos = nrow(subset(df, df[, i] > 0 & !is.na(df[, i]))),
           OutLo = nrow(subset(df, df[, i] < iqrlow)),
           OutHi = nrow(subset(df, df[, i] > iqrupp))
         )
@@ -152,12 +156,12 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
         )
       )
     }
-    if (pbar == 1) {
+    if (pbar == TRUE) {
       setTxtProgressBar(pb, i / ncol)
     }
   }
 
-  if (pbar == 1) {
+  if (pbar == TRUE) {
     close(pb)
   }
 
@@ -177,17 +181,18 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
 
 
 
-
-# Ini Logit Rank
 #' Logistic Regression Ranking
 #'
-#' It runs all the possible logistic models for a given set of characteristics (\code{chr}) and then rank them
-#' from highest to lowest performance based on AIC.
-#' Important Note: This function may take time depending on the datset size and number of variables used in it.
-#' The user should run it at the end of the modeling process once variables have been pre-selected in previous steps.
+#' It runs all the possible logistic models for a given set of characteristics (\code{chr}) and
+#' then rank them from highest to lowest performance based on AIC.
+#' Important Note: This function may take time depending on the datset size and number of variables
+#' used in it.
+#' The user should run it at the end of the modeling process once variables have been pre-selected
+#' in previous steps.
 #' @param df Data frame.
 #' @param y Binary dependent variable.
 #' @param chr Vector with the characteristics (independent variables).
+#' @param verbose Print information above progress. Default = FALSE.
 #' @return The command \code{smbinning.logitrank} returns a table with the combination of characteristics
 #' and their corresponding AIC and deviance. The table is ordered by AIC from lowest (best) to highest.
 #' @examples
@@ -200,10 +205,15 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
 #'                     df = smbsimdf3)
 #'
 #' @export
-smbinning.logitrank <- function(y, chr, df) {
-  f <- c() # Initialize empty list of formulas
-  att <-
-    c() # Initialize empty list of characteristics in each formula
+smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
+  require(utils)
+  require(stats)
+
+  # Initialize empty list of formulas
+  f <- c()
+
+  # Initialize empty list of characteristics in each formula
+  att <- c()
   for (k in 1:length(chr)) {
     v <- t(combn(chr, k))
     nrow <- nrow(v)
@@ -237,16 +247,36 @@ smbinning.logitrank <- function(y, chr, df) {
   chrsum <- data.frame(character(0), numeric(0), numeric(0))
 
   # Intercept Only
+  if (verbose == TRUE) {
+    cat("Running regression to calculate intercept.")
+    startTime <- Sys.time()
+  }
   model <- glm(paste0(y, " ~ 1"),
                family = binomial(link = 'logit'),
                data = df)
-  chrsum <-
-    rbind(chrsum, cbind(c("Intercept Only"), c(model$aic), c(model$deviance)))
+
+  if (verbose == TRUE) {
+    cat(" Elapsed: ", Sys.time() - startTime, "\n")
+  }
+
+  chrsum <- rbind(chrsum,
+                  cbind(c("Intercept Only"), c(model$aic), c(model$deviance)))
+
+
+  if (verbose == TRUE) {
+    cat("Running per-variable regression. \n")
+    startTime <- Sys.time()
+  }
 
   for (i in 1:length(f)) {
+    if (verbose = TRUE) { cat("Variable : ", f[i], "\n") }
     model <- glm(f[i], family = binomial(link = 'logit'), data = df)
     chrsum <-
       rbind(chrsum, cbind(c(att[i]), c(model$aic), c(model$deviance)))
+  }
+
+  if (verbose == TRUE) {
+    cat(" Elapsed: ", Sys.time() - startTime, "\n")
   }
 
   colnames(chrsum) <- c("Characteristics", "AIC", "Deviance")
