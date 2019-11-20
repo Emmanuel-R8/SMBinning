@@ -269,7 +269,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   }
 
   for (i in 1:length(f)) {
-    if (verbose = TRUE) { cat("Variable : ", f[i], "\n") }
+    if (verbose == TRUE) { cat("Variable : ", f[i], "\n") }
     model <- glm(f[i], family = binomial(link = 'logit'), data = df)
     chrsum <-
       rbind(chrsum, cbind(c(att[i]), c(model$aic), c(model$deviance)))
