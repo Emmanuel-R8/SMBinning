@@ -25,8 +25,11 @@ The user should run it at the end of the modeling process once variables have be
 }
 \examples{
 # Load library and its dataset
-library(smbinning) # Load package and its data
+library(smbinning)
 
 # Example: Best combination of characteristics
-smbinning.logitrank(y="fgood",chr=c("chr1","chr2","chr3"),df=smbsimdf3)
+smbinning.logitrank(y = "fgood",
+                    chr = c("chr1","chr2","chr3"),
+                    df = smbsimdf3)
+
 }

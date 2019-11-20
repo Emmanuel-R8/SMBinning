@@ -13,27 +13,43 @@
 #' If not found in the data frame, it will take the closest lower value.
 #' @param report Indicator defined by user. 1: Show report (Default), 0: Do not show report.
 #' @param plot Specifies the plot to be shown for overall evaluation. It has three options: 'auc' shows the ROC curve,
-#' 'ks' shows the cumulative distribution of the actual class and its maximum difference (KS Statistic), and 'none' (Default).
-#' @param returndf Option for the user to save the data frame behind the metrics. 1: Show data frame, 0: Do not show (Default).
-#' @return The command \code{smbinning.metrics} returns a report with classic performance metrics of a classification model.
+#' 'ks' shows the cumulative distribution of the actual class and its maximum difference (KS Statistic),
+#' and 'none' (Default).
+#' @param returndf Option for the user to save the data frame behind the metrics. 1: Show data frame, 0:
+#' Do not show (Default).
+#' @return The command \code{smbinning.metrics} returns a report with classic performance metrics of a
+#' classification model.
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
 #'
 #' # Example: Metrics Credit Score 1
-#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,
+#'                   prediction="cbs1",
+#'                   actualclass="fgood",
 #'                   report=1) # Show report
-#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
-#'                   cutoff=600, report=1) # User cutoff
-#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
-#'                   report=0, plot="auc") # Plot AUC
-#' smbinning.metrics(dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
+#' smbinning.metrics(dataset=smbsimdf1,
+#'                   prediction="cbs1",
+#'                   actualclass="fgood",
+#'                   cutoff=600,
+#'                   report=1) # User cutoff
+#' smbinning.metrics(dataset=smbsimdf1,
+#'                   prediction="cbs1",
+#'                   actualclass="fgood",
+#'                   report=0,
+#'                   plot="auc") # Plot AUC
+#' smbinning.metrics(dataset=smbsimdf1,
+#'                   prediction="cbs1",
+#'                   actualclass="fgood",
 #'                   report=0, plot="ks") # Plot KS
 #'
 #' # Save table with all details of metrics
-#' cbs1metrics=smbinning.metrics(
-#'   dataset=smbsimdf1,prediction="cbs1",actualclass="fgood",
-#'   report=0, returndf=1) # Save metrics details
+#' cbs1metrics <- smbinning.metrics(dataset=smbsimdf1,
+#'                                  prediction="cbs1",
+#'                                  actualclass="fgood",
+#'                                  report=0,
+#'                                  returndf=1) # Save metrics details
+#'
 #' @export
 smbinning.metrics <- function(dataset,
                               prediction,
@@ -497,7 +513,10 @@ smbinning.metrics <- function(dataset,
 #' library(smbinning)
 #'
 #' # Check stability for income
-#' smbinning.psi(df=smbsimdf1,y="period",x="inc")
+#' smbinning.psi(df=smbsimdf1,
+#'               y="period",
+#'               x="inc")
+#'
 #' @export
 smbinning.psi <- function(df, y, x) {
   i <- which(names(df) == x)

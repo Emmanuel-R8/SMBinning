@@ -33,8 +33,14 @@
 #' library(smbinning) # Load package and its data
 #'
 #' # Example: Exploratory data analysis of dataset
-#' smbinning.eda(smbsimdf1,rounding=3)$eda # Table with basic statistics
-#' smbinning.eda(smbsimdf1,rounding=3)$edapct # Table with basic percentages
+#'
+#' # Table with basic statistics
+#' smbinning.eda(smbsimdf1,
+#'               rounding = 3)$eda
+#'
+#' # Table with basic percentages
+#' smbinning.eda(smbsimdf1,
+#'               rounding = 3)$edapct
 #' @export
 smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   # Check data frame and formats
@@ -186,10 +192,13 @@ smbinning.eda <- function(df, rounding = 3, pbar = 1) {
 #' and their corresponding AIC and deviance. The table is ordered by AIC from lowest (best) to highest.
 #' @examples
 #' # Load library and its dataset
-#' library(smbinning) # Load package and its data
+#' library(smbinning)
 #'
 #' # Example: Best combination of characteristics
-#' smbinning.logitrank(y="fgood",chr=c("chr1","chr2","chr3"),df=smbsimdf3)
+#' smbinning.logitrank(y = "fgood",
+#'                     chr = c("chr1","chr2","chr3"),
+#'                     df = smbsimdf3)
+#'
 #' @export
 smbinning.logitrank <- function(y, chr, df) {
   f <- c() # Initialize empty list of formulas
@@ -269,56 +278,109 @@ smbinning.logitrank <- function(y, chr, df) {
 #' library(smbinning)
 #'
 #' # Sampling
-#' pop=smbsimdf1 # Population
-#' train=subset(pop,rnd<=0.7) # Training sample
+#' # Population
+#' pop <- smbsimdf1
+#'
+#' # Training sample
+#' train <- subset(pop,rnd <= 0.7)
 #'
 #' # Generate binning object to generate variables
-#' smbcbs1=smbinning(train,x="cbs1",y="fgood")
-#' smbcbinq=smbinning.factor(train,x="cbinq",y="fgood")
-#' smbcblineut=smbinning.custom(train,x="cblineut",y="fgood",cuts=c(30,40,50))
-#' smbpmt=smbinning.factor(train,x="pmt",y="fgood")
-#' smbtob=smbinning.custom(train,x="tob",y="fgood",cuts=c(1,2,3))
-#' smbdpd=smbinning.factor(train,x="dpd",y="fgood")
-#' smbdep=smbinning.custom(train,x="dep",y="fgood",cuts=c(10000,12000,15000))
-#' smbod=smbinning.factor(train,x="od",y="fgood")
-#' smbhome=smbinning.factor(train,x="home",y="fgood")
-#' smbinc=smbinning.factor.custom(
-#'   train,x="inc",y="fgood",
-#'   c("'W01','W02'","'W03','W04','W05'","'W06','W07'","'W08','W09','W10'"))
+#' smbcbs1 <- smbinning(train,
+#'                      x = "cbs1",
+#'                      y = "fgood")
+#'
+#' smbcbinq <- smbinning.factor(train,
+#'                              x = "cbinq",
+#'                              y = "fgood")
+#'
+#' smbcblineut <- smbinning.custom(train,
+#'                                 x = "cblineut",
+#'                                 y = "fgood",
+#'                                 cuts = c(30,40,50))
+#'
+#' smbpmt <- smbinning.factor(train,
+#'                            x = "pmt",
+#'                            y = "fgood")
+#'
+#' smbtob <- smbinning.custom(train,
+#'                            x = "tob",
+#'                            y = "fgood",
+#'                            cuts = c(1,2,3))
+#'
+#' smbdpd <- smbinning.factor(train,
+#'                            x = "dpd",
+#'                            y = "fgood")
+#'
+#' smbdep <- smbinning.custom(train,
+#'                            x = "dep",
+#'                            y = "fgood",
+#'                            cuts = c(10000,12000,15000))
+#'
+#' smbod <- smbinning.factor(train,
+#'                           x = "od",
+#'                           y = "fgood")
+#'
+#' smbhome <- smbinning.factor(train,
+#'                             x = "home",
+#'                             y = "fgood")
+#'
+#' smbinc <- smbinning.factor.custom(train,
+#'                                   x = "inc",
+#'                                   y = "fgood",
+#'                                   c("'W01','W02'","'W03','W04','W05'",
+#'                                   "'W06','W07'","'W08','W09','W10'"))
 #'
 # Generate new characteristics and update population dataset
-#' pop=smbinning.gen(pop,smbcbs1,"g1cbs1")
-#' pop=smbinning.factor.gen(pop,smbcbinq,"g1cbinq")
-#' pop=smbinning.gen(pop,smbcblineut,"g1cblineut")
-#' pop=smbinning.factor.gen(pop,smbpmt,"g1pmt")
-#' pop=smbinning.gen(pop,smbtob,"g1tob")
-#' pop=smbinning.factor.gen(pop,smbdpd,"g1dpd")
-#' pop=smbinning.gen(pop,smbdep,"g1dep")
-#' pop=smbinning.factor.gen(pop,smbod,"g1od")
-#' pop=smbinning.factor.gen(pop,smbhome,"g1home")
-#' pop=smbinning.factor.gen(pop,smbinc,"g1inc")
+#' pop <- smbinning.gen(pop,smbcbs1, "g1cbs1")
+#' pop <- smbinning.factor.gen(pop, smbcbinq, "g1cbinq")
+#' pop <- smbinning.gen(pop, smbcblineut, "g1cblineut")
+#' pop <- smbinning.factor.gen(pop, smbpmt, "g1pmt")
+#' pop <- smbinning.gen(pop, smbtob, "g1tob")
+#' pop <- smbinning.factor.gen(pop, smbdpd, "g1dpd")
+#' pop <- smbinning.gen(pop, smbdep, "g1dep")
+#' pop <- smbinning.factor.gen(pop, smbod, "g1od")
+#' pop <- smbinning.factor.gen(pop, smbhome, "g1home")
+#' pop <- smbinning.factor.gen(pop, smbinc, "g1inc")
 #'
 #' # Resample
-#' train=subset(pop,rnd<=0.7) # Training sample
-#' test=subset(pop,rnd>0.7) # Testing sample
+#' # Training sample
+#' train <- subset(pop, rnd <= 0.7)
+#'
+#' # Testing sample
+#' test <- subset(pop,rnd > 0.7)
 #'
 #' # Run logistic regression
-#' f=fgood~g1cbs1+g1cbinq+g1cblineut+g1pmt+g1tob+g1dpd+g1dep+g1od+g1home+g1inc
-#' modlogisticsmb=glm(f,data = train,family = binomial())
+#' f <- fgood ~ g1cbs1 + g1cbinq + g1cblineut + g1pmt + g1tob + g1dpd + g1dep + g1od + g1home + g1inc
+#'
+#' modlogisticsmb <- glm(f,
+#'                       data  =  train,
+#'                       family  =  binomial())
 #' summary(modlogisticsmb)
 #'
 #' # Example: Scaling from logistic parameters to points
-#' smbscaled=smbinning.scaling(modlogisticsmb,pdo=20,score=720,odds=99)
-#' smbscaled$logitscaled # Scaled model
-#' smbscaled$minmaxscore # Expected minimum and maximum Score
-#' smbscaled$parameters # Parameters used for scaling
-#' summary(smbscaled$logitraw) # Extract of original logistic regression
+#' smbscaled <- smbinning.scaling(modlogisticsmb,
+#'                                pdo = 20,
+#'                                score = 720,
+#'                                odds = 99)
+#'
+#' # Scaled model
+#' smbscaled$logitscaled
+#'
+#' # Expected minimum and maximum Score
+#' smbscaled$minmaxscore
+#'
+#' # Parameters used for scaling
+#' smbscaled$parameters
+#'
+#' # Extract of original logistic regression
+#' summary(smbscaled$logitraw)
 #'
 #' # Example: Generate score from scaled model
-#' pop1=smbinning.scoring.gen(smbscaled=smbscaled, dataset=pop)
+#' pop1 <- smbinning.scoring.gen(smbscaled = smbscaled, dataset = pop)
 #'
 #' # Example Generate SQL code from scaled model
 #' smbinning.scoring.sql(smbscaled)
+#'
 #' @export
 smbinning.scaling <- function(logitraw,
                               pdo = 20,
