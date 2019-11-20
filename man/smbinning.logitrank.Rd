@@ -4,7 +4,7 @@
 \alias{smbinning.logitrank}
 \title{Logistic Regression Ranking}
 \usage{
-smbinning.logitrank(y, chr, df)
+smbinning.logitrank(y, chr, df, verbose = FALSE)
 }
 \arguments{
 \item{y}{Binary dependent variable.}
@@ -12,16 +12,20 @@ smbinning.logitrank(y, chr, df)
 \item{chr}{Vector with the characteristics (independent variables).}
 
 \item{df}{Data frame.}
+
+\item{verbose}{Print information above progress. Default = FALSE.}
 }
 \value{
 The command \code{smbinning.logitrank} returns a table with the combination of characteristics
 and their corresponding AIC and deviance. The table is ordered by AIC from lowest (best) to highest.
 }
 \description{
-It runs all the possible logistic models for a given set of characteristics (\code{chr}) and then rank them
-from highest to lowest performance based on AIC.
-Important Note: This function may take time depending on the datset size and number of variables used in it.
-The user should run it at the end of the modeling process once variables have been pre-selected in previous steps.
+It runs all the possible logistic models for a given set of characteristics (\code{chr}) and
+then rank them from highest to lowest performance based on AIC.
+Important Note: This function may take time depending on the datset size and number of variables
+used in it.
+The user should run it at the end of the modeling process once variables have been pre-selected
+in previous steps.
 }
 \examples{
 # Load library and its dataset

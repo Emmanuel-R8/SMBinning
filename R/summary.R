@@ -1,5 +1,7 @@
+#' @import assertthat
+#'
 #' @include error_checking.R
-
+#'
 # Begin Summary IV
 #' Information Value Summary
 #'
@@ -14,7 +16,7 @@
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning)
-#'
+#
 #' # Test sample
 #' test=subset(smbsimdf1,rnd>0.9) # Training sample
 #' test$rnd=NULL

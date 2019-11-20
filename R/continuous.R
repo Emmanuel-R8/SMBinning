@@ -1,5 +1,11 @@
+#' @import dplyr
+#' @import assertthat
+#' @import gsubfn
+#' @import partykit
+#' @import sqldf
+#'
 #' @include error_checking.R
-
+#'
 #' Optimal Binning for Scoring Modeling
 #'
 #' \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
@@ -15,6 +21,7 @@
 #' @param x Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed.
 #' Name of \code{x} must not have a dot.
 #' @param p Percentage of records per bin. Default 5\% (0.05).
+#' @param verbose Print progress messages. Default is FALSE.
 #' This parameter only accepts values greater that 0.00 (0\%) and lower than 0.50 (50\%).
 #' @return The command \code{smbinning} generates and object containing the necessary info and utilities for binning.
 #' The user should save the output result so it can be used
@@ -30,11 +37,13 @@
 #' result$bands # Bins or bands
 #' result$ctree # Decision tree
 #' @export
-smbinning <- function(df, y, x, p = p) {
-  require(assertthat)
-  require(gsubfn)
-  require(partykit)
-  require(sqldf)
+smbinning <- function(df, y, x, p = p, verbose = FALSE) {
+
+  requireNamespace("dplyr")
+  requireNamespace("assertthat")
+  requireNamespace("gsubfn")
+  requireNamespace("partykit")
+  requireNamespace("sqldf")
 
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE, p = 0.05)
@@ -55,15 +64,14 @@ smbinning <- function(df, y, x, p = p) {
     return(NA)
   })
 
-
+  if (verbose == TRUE) {"Start recursive partitioning."; startTime <- Sys.time()}
   ctree <- ctree(
     formula(paste(y, "~", x)),
     data = df,
     na.action = na.exclude,
-    control = ctree_control(minbucket = ceiling(round(p * nrow(
-      df
-    ))))
+    control = ctree_control(minbucket = ceiling(round(p * nrow(df))))
   )
+  if (verbose == TRUE) {cat("  Elapsed: ", Sys.time() - startTime, "\n")}
 
   bins <- width(ctree)
   tryCatch({
@@ -80,9 +88,11 @@ smbinning <- function(df, y, x, p = p) {
   # Append cutpoinstop()ts in a table (Automated)
   # Shell
   cutvct <- data.frame(matrix(ncol = 0, nrow = 0))
-  n <- length(ctree) # Number of nodes
 
-  for (index_i in 1:n) {
+  # Number of nodes
+  nNodes <- length(ctree)
+
+  for (index_i in 1:nNodes) {
     cutvct <-  rbind(cutvct, ctree[index_i]$node$split$breaks)
   }
 
@@ -100,9 +110,9 @@ smbinning <- function(df, y, x, p = p) {
   IVTable <- data.frame(matrix(ncol = 0, nrow = 0))
 
   # Number of cutpoints
-  n <- length(cutvct)
+  nCuts <- length(cutvct)
 
-  for (col_i in 1:n) {
+  for (col_i in 1:nCuts) {
     cutpoint  <-  cutvct[col_i]
     IVTable <-  rbind(
       IVTable,
@@ -224,9 +234,9 @@ smbinning <- function(df, y, x, p = p) {
   # Covert to table numeric
   options(warn = -1)
 
-  ncol  <-  ncol(IVTable)
-  for (col_j in 2:ncol) {
-    IVTable[, col_j] <- as.numeric(IVTable[col_j])
+  nCol  <-  ncol(IVTable)
+  for (col_i in 2:nCol) {
+    IVTable[, col_i] <- as.numeric(IVTable[col_i])
   }
 
   options(warn = 0)
@@ -237,8 +247,8 @@ smbinning <- function(df, y, x, p = p) {
   IVTable[1, 4] <- IVTable[1, 7] # Nbr Bads
 
   # From 2nd row
-  n <- nrow(IVTable) - 2
-  for (row_i in 2:n) {
+  nRowIV <- nrow(IVTable) - 2
+  for (row_i in 2:nRowIV) {
     IVTable[row_i, 2] <- IVTable[row_i, 5] - IVTable[row_i - 1, 5]
     IVTable[row_i, 3] <- IVTable[row_i, 6] - IVTable[row_i - 1, 6]
     IVTable[row_i, 4] <- IVTable[row_i, 7] - IVTable[row_i - 1, 7]
@@ -281,9 +291,7 @@ smbinning <- function(df, y, x, p = p) {
   IVTable[, 13] <- round(log(IVTable[, 3] / IVTable[, 4]) - LnGB, 4)
 
   # Mg IV
-  IVTable[, 14] <-
-    round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4)
-  # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
+  IVTable[, 14] <- round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4)
 
   # Calculates Information Value even with undefined numbers
   IVTable[col_y + 2, 14] <- 0.0000

@@ -1,7 +1,8 @@
+#' @import tidyverse
+
 haveParametersError <- function(df, x, y, xIsFactor = FALSE, ...) {
 
-  require(tidyverse)
-  require(stringr)
+  requireNamespace("tidyverse")
 
   returnMsg <- ""
 

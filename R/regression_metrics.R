@@ -1,5 +1,7 @@
+#' @import assertthat
+#'
 #' @include error_checking.R
-
+#'
 # Begin Metrics
 #' Performance Metrics for a Classification Model
 #'
@@ -58,6 +60,8 @@ smbinning.metrics <- function(dataset,
                               report = 1,
                               plot = "none",
                               returndf = 0) {
+
+  requireNamespace("assertthat")
 
   # Find Column for actualclass
   i <- which(names(dataset) == actualclass)
@@ -205,7 +209,7 @@ smbinning.metrics <- function(dataset,
     # max(df$YoudenJ)
 
     # Optimal Cutoff
-    optcut <- df[df$YoudenJ == max(df$YoudenJ),]$Prediction
+    optcut <- df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
     df$YoudenJ <- NULL
     optcutcomment <- " (Optimal)"
 
@@ -229,8 +233,7 @@ smbinning.metrics <- function(dataset,
     f <- which(names(df) == "FPR")
     t <- which(names(df) == "TPR")
     for (i in 1:nrow(df) - 1) {
-      df[i, a] <-
-        0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
+      df[i, a] <- 0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
     }
 
     # AUC
@@ -250,9 +253,9 @@ smbinning.metrics <- function(dataset,
     # KS
     df$MgKS <- abs(df$PctCumAscGood - df$PctCumAscBad)
     ks <- as.numeric(max(df$MgKS))
-    scoreks <- as.numeric(df[df$MgKS == ks,]$Prediction)
-    cgks <- as.numeric(df[df$MgKS == ks,]$PctCumAscGood)
-    cbks <- as.numeric(df[df$MgKS == ks,]$PctCumAscBad)
+    scoreks <- as.numeric(df[df$MgKS == ks, ]$Prediction)
+    cgks <- as.numeric(df[df$MgKS == ks, ]$PctCumAscGood)
+    cbks <- as.numeric(df[df$MgKS == ks, ]$PctCumAscBad)
     df$MgKS <- NULL
 
     # KS Evaluation
@@ -270,17 +273,17 @@ smbinning.metrics <- function(dataset,
     # If report is activated (report = 1)
     if (report == 1) {
       # Confusion Matrix Components
-      tp <- df[df$Prediction == optcut,]$CumDescGood
-      fp <- df[df$Prediction == optcut,]$CumDescBad
-      fn <- df[df$Prediction == optcut,]$FN
-      tn <- df[df$Prediction == optcut,]$TN
+      tp <- df[df$Prediction == optcut, ]$CumDescGood
+      fp <- df[df$Prediction == optcut, ]$CumDescBad
+      fn <- df[df$Prediction == optcut, ]$FN
+      tn <- df[df$Prediction == optcut, ]$TN
       p <- SumGoods
       n <- SumBads
 
       recsabovecutoff <-
-        df[df$Prediction == optcut,]$CumDescTotal / SumRecords
-      goodrate <- df[df$Prediction == optcut,]$GoodRateDesc
-      badrate <- df[df$Prediction == optcut,]$BadRateDesc
+        df[df$Prediction == optcut, ]$CumDescTotal / SumRecords
+      goodrate <- df[df$Prediction == optcut, ]$GoodRateDesc
+      badrate <- df[df$Prediction == optcut, ]$BadRateDesc
 
       # Report on Metrics
       admetrics <- character()
@@ -581,7 +584,7 @@ smbinning.psi <- function(df, y, x) {
     psimg <- as.table(psimg)
 
     # Extract total PSI only
-    psitable <- psimg[nrow(psimg), ]
+    psitable <- psimg[nrow(psimg),]
     psitable <- as.data.frame(psitable)
 
     # Plot

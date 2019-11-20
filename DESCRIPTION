@@ -14,18 +14,10 @@ Description: A set of functions to build a scoring model from beginning to end, 
     transforms logistic coefficients into points for a better business understanding and 
     calculates and visualizes classic performance metrics of a classification model.
 Depends:
-    R (>= 2.10)
+    R (>= 3.2)
 Imports:
-    tcltk,
-    stats,
-    graphics,
-    grDevices,
-    utils,
     sqldf,
-    Matrix,
     partykit,
-    nlme,
-    Formula,
     gsubfn,
     tidyverse,
     assertthat

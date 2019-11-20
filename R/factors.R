@@ -1,3 +1,7 @@
+#' @import gsubfn
+#' @import partykit
+#' @import sqldf
+#' @import assertthat
 #' @include error_checking.R
 
 # Begin Binning Factors
@@ -23,9 +27,10 @@
 #' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
 
-  require(gsubfn)
-  require(partykit)
-  require(sqldf)
+  requireNamespace("assertthat")
+  requireNamespace("gsubfn")
+  requireNamespace("partykit")
+  requireNamespace("sqldf")
 
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE, maxcat = maxcat)
@@ -42,10 +47,11 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 
 
   # Append cutpoints in a table (Automated)
-  # cutvct=data.frame(matrix(ncol=0,nrow=0)) # Shell
+  # cutvct=data.frame(matrix(ncol=0,nrow=0))
+
+  # Shell
   cutvct <- c()
-  cuts <-
-    fn$sqldf("select distinct $x from df where $x is not NULL")
+  cuts <- fn$sqldf("select distinct $x from df where $x is not NULL")
   cuts <- as.vector(as.matrix(cuts))
 
   # Number of cutpoints
@@ -147,8 +153,8 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   # Covert table to numeric
   options(warn = -1)
   ncol <- ncol(ivt)
-  for (col_y in 2:ncol) {
-    ivt[, col_y] <- as.numeric(ivt[, col_y])
+  for (col_i in 2:ncol) {
+    ivt[, col_i] <- as.numeric(ivt[, col_i])
   }
   options(warn = 0)
 
@@ -192,7 +198,6 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   # Mg IV
   ivt[, 14] <- round(ivt[, 13] * (ivt[, 3] / G - ivt[, 4] / B), 4)
 
-  # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
   # Calculates Information Value even with undefined numbers
   ivt[col_y + 2, 14] <- 0.0
   for (k in 1:(nrow(ivt) - 1))

@@ -1,3 +1,7 @@
+#' @import assertthat
+#' @import stats
+#' @import utils
+#'
 #' @include error_checking.R
 
 # Begin Exploratory Data Analysis
@@ -43,6 +47,9 @@
 #'               rounding = 3)$edapct
 #' @export
 smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
+
+  requireNamespace("assertthat")
+
   # Check data frame and formats
   tryCatch({
     assert_that(is.data.frame(df) & !is_tibble(df))
@@ -206,14 +213,16 @@ smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
 #'
 #' @export
 smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
-  require(utils)
-  require(stats)
+  requireNamespace("utils")
+  requireNamespace("stats")
 
   # Initialize empty list of formulas
   f <- c()
 
   # Initialize empty list of characteristics in each formula
   att <- c()
+
+  # Iterate through all characteristics
   for (k in 1:length(chr)) {
     v <- t(combn(chr, k))
     nrow <- nrow(v)
@@ -285,9 +294,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   chrsum <- chrsum[order(chrsum$AIC),]
 
   return(chrsum)
-}
-# Ini Logit Rank
-
+} # End smbinning.logitrank
 
 
 
@@ -451,35 +458,45 @@ smbinning.scaling <- function(logitraw,
     # Number of characteristics
     nchr <- length(logitraw$xlevels)
 
-    # Characteristics and bin names #
-    chrname <- list() # Generate empty list
-    chrbinname <- list() # Generate empty list
-    chrbinlist <- list() # Generate empty list
+    # Characteristics and bin names initialised with empty lists
+    chrname <- list()
+    chrbinname <- list()
+    chrbinlist <- list()
+
     for (i in 1:nchr) {
-      chrname[i] <-
-        names(data.frame(logitraw$xlevels[i])) # Name of the characteristics
-      chrbin <-
-        data.frame(names(table(logitraw$xlevels[i]))) # Characteristic's bins
+      # Name of the characteristics
+      chrname[i] <- names(data.frame(logitraw$xlevels[i]))
+
+      # Characteristic's bins
+      chrbin <- data.frame(names(table(logitraw$xlevels[i])))
+
       n <- as.character(chrname[i])
       binappend <- list()
       for (j in 1:dim(chrbin)[1]) {
-        bincut <- as.character(chrbin[j, 1]) # For example "00 Miss"
-        chrbinname <-
-          c(chrbinname, paste(chrname[i], bincut, sep = "")) # For example "binnedage 01 <= 25"
+
+        # For example "00 Miss"
+        bincut <- as.character(chrbin[j, 1])
+
+        # For example "binnedage 01 <= 25"
+        chrbinname <- c(chrbinname, paste(chrname[i], bincut, sep = ""))
         binappend <- c(binappend, bincut)
       }
       chrbinlist[n] <- list(binappend)
     }
 
     # Bins and coefficients
-    bincoeffname <-
-      rownames(as.data.frame(logitraw$coefficients)) # Getting bin names
-    bincoeff <-
-      as.list(matrix(logitraw$coefficients)) # Getting bin coefficients
+    # Getting bin names
+    bincoeffname <- rownames(as.data.frame(logitraw$coefficients))
+
+    # Getting bin coefficients
+    bincoeff <- as.list(matrix(logitraw$coefficients))
+
     # Creating a list of bins and their coefs
     names(bincoeff) <- bincoeffname
+
     # Updating bins, their coefficients and adding base bins and their coefficients
     for (i in 1:length(chrbinname)) {
+
       # if not a base bin then next
       if (exists(as.character(chrbinname[i]), where = bincoeff)) {
         next
@@ -504,19 +521,21 @@ smbinning.scaling <- function(logitraw,
     scorebychr <- (interceptbychr) + (offsetbychr)
 
     # Updating the bincoeff into a dataframe
-    bincoeff <- data.frame(sapply(bincoeff, function(x)
-      x[[1]]))
+    bincoeff <- data.frame(sapply(bincoeff, function(x) {x[[1]]}))
     colnames(bincoeff) <- "Coefficient"
     bincoeff <- cbind(rownames(bincoeff), bincoeff)
     bincoeff$Weight <- (bincoeff$Coefficient) * (factor)
     bincoeff$WeightScaled <- (bincoeff$Weight) + (scorebychr)
-    bincoeff[1, 4] <- 0.000 #Make scaled constant equal to zero
+
+    # Make scaled constant equal to zero
+    bincoeff[1, 4] <- 0.000
     bincoeff$Points <- round(bincoeff$WeightScaled, 0)
     colnames(bincoeff) <- c("FullName",
                             "Coefficient",
                             "Weight",
                             "WeightScaled",
                             "Points")
+
     # Sorting bincoeff
     FullName <- unlist(chrbinname)
     FullName <- c("(Intercept)", FullName)
@@ -525,33 +544,41 @@ smbinning.scaling <- function(logitraw,
     bincoeff <- bincoeff[order(bincoeff$FullName),]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
+
     # Create attributes
     Attribute <- unlist(chrbinlist)
+
     # Add value for intercept to attributes
     Attribute <- c("", Attribute)
     Attribute <- unname(data.frame(Attribute))
     rownames(Attribute) <- NULL
+
     # Creating Characteristic
     Characteristic = list()
     for (i in 1:length(FullName)) {
-      # Characteristic=c(Characteristic, gsub(gsub("[[:punct:]]","",as.character(Attribute[[i,1]])),"",gsub("[[:punct:]]","",FullName[i])))
-      Characteristic <-
-        c(Characteristic, gsub("[0-9][0-9] .*$", "",  FullName[i]))
+      # Characteristic=c(Characteristic, gsub(gsub("[[:punct:]]","",
+      # as.character(Attribute[[i,1]])),"",gsub("[[:punct:]]","",FullName[i])))
+      Characteristic <- c(Characteristic, gsub("[0-9][0-9] .*$", "",  FullName[i]))
     }
     Characteristic <- unlist(Characteristic)
     Characteristic <- unname(data.frame(Characteristic))
+
     # Removing column FullName from the bincoeff
     drops <- c("FullName")
     bincoeff <- bincoeff[, !(names(bincoeff) %in% drops)]
+
     # Adding attributes to bincoeff
     bincoeff <- cbind(Attribute, bincoeff)
+
     # Adding characteristic to bincoeff
     bincoeff <- cbind(Characteristic, bincoeff)
 
     # Get Min/Max Score
     chrpts <- bincoeff
     chrpts <- chrpts[, c("Characteristic", "Points")]
-    chrpts <- chrpts[-1,] # Remove (intercept)
+    chrpts <- chrpts[-1,]
+
+    # Remove (intercept)
     minmaxscore <-
       c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
         sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
@@ -600,40 +627,48 @@ smbinning.scaling <- function(logitraw,
 #' corresponding scaled weights per characteristic.
 #' @export
 smbinning.scoring.gen <- function(smbscaled, dataset) {
+
+  # Check if logitscaled is missing or not
   if (missing(smbscaled)) {
-    # Check if logitscaled is missing or not
     return(stop("Missing argument: smbscaled"))
+
   }
+  # Check if dataset is missing or not
   else if (missing(dataset)) {
-    # Check if dataset is missing or not
     return(stop("Missing argument: dataset"))
   }
+  # Check if data.frame
   else if (!is.data.frame(dataset)) {
-    # Check if data.frame
     return(stop("Not a data frame"))
   }
+
   else if (names(smbscaled)[1] != "logitscaled") {
     return(stop("Not from 'smbinning.scaling'"))
+
   } else {
     df <- dataset
     logitraw <- smbscaled$logitraw
     logitscaled <- smbscaled$logitscaled
     chrattpts <- as.data.frame(logitscaled)
-    chrattpts <-
-      chrattpts[, c("Characteristic", "Attribute", "Points")]
+    chrattpts <- chrattpts[, c("Characteristic", "Attribute", "Points")]
+
     for (i in 1:length(logitraw$xlevels)) {
       chrname <- names(logitraw$xlevels[i])
-      chrattptstmp <-
-        subset(chrattpts, chrattpts$Characteristic == chrname) # Tmp df for char [i] with attr and points
+
+      # Tmp df for char [i] with attr and points
+      chrattptstmp <- subset(chrattpts, chrattpts$Characteristic == chrname)
       df <- cbind(df, chrtmp = NA)
-      colidx <-
-        which(names(df) == chrname) # Where is original characteristic
+
+      # Where is original characteristic
+      colidx <- which(names(df) == chrname)
       # df=cbind(df,chrtmporiginal=NA)
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
+
       for (j in 1:nrow(chrattptstmp)) {
         df <- within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
                        chrattptstmp[j,][3])
       }
+
       # df$chrtmporiginal=NULL
       df$chrtmp <- as.numeric(df$chrtmp)
 
@@ -650,11 +685,17 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
     }
 
     # Create final score
+
+    # Stop process if column Score already exists.
     if ("Score" %in% colnames(df)) {
       stop("Column 'Score' already exists. Drop it or rename it.")
-    } # Stop process if column Score already exists.
-    df <- cbind(df, Score = 0) # Add score column
-    scorecolid <- ncol(df) # Score column id
+    }
+
+    # Add score column
+    df <- cbind(df, Score = 0)
+
+    # Score column id
+    scorecolid <- ncol(df)
 
     # All characteristics
     crhpts <- list()
@@ -663,12 +704,16 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
         cbind(crhpts, paste(names(logitraw$xlevels[i]), "Points", sep =
                               ""))
     }
-    nbrchar <- length(crhpts) # Number of new generated chars
-    colini <-
-      which(names(df) == crhpts[1]) # Where is the new characteristic
+
+    # Number of new generated chars
+    nbrchar <- length(crhpts)
+
+    # Where is the new characteristic
+    colini <- which(names(df) == crhpts[1])
     colend <- colini + nbrchar - 1
-    df[, scorecolid] <-
-      rowSums(df[, colini:colend]) # Sum rows to get Score
+
+    # Sum rows to get Score
+    df[, scorecolid] <- rowSums(df[, colini:colend])
   }
   return(df)
 }
