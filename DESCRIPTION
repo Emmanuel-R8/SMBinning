@@ -18,7 +18,7 @@ Imports:
     stats,
     graphics,
     grDevices,
-    utils
+    utils,
     sqldf,
     Matrix,
     partykit,
