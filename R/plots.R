@@ -17,7 +17,7 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
 
   # Check sumivt is a dataframe
   tryCatch({
-    assertthat::assert_that(is.data.frame(sumivt))
+    assert_that(is.data.frame(sumivt))
   },
   error = function(e) {
     message("Data sumivt not a dataframe.")

@@ -30,7 +30,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE, ...)
   tryCatch({
-    msg == ""
+    assert_that(msg == "")
   },
   error = function(e) {
     message(msg)
@@ -255,7 +255,7 @@ smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE)
   tryCatch({
-    msg == ""
+    assert_that(msg == "")
   },
   error = function(e) {
     message(msg)
@@ -411,9 +411,6 @@ smbinning.factor.custom <- function(df, y, x, groups) {
   )
 }
 # End Custom Binning Factors
-
-
-
 
 
 

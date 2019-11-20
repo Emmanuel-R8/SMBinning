@@ -29,7 +29,7 @@
 smbinning.sumiv <- function(df, y) {
   # Check data frame and formats
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assert_that(is.data.frame(df))
   },
   error = function(e) {
     message("Data df not a dataframe.")

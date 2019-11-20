@@ -1,6 +1,5 @@
 #' @include error_checking.R
 
-
 #' Optimal Binning for Scoring Modeling
 #'
 #' \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
@@ -37,12 +36,11 @@ smbinning <- function(df, y, x, p = 0.05) {
   require(partykit)
   require(sqldf)
 
-  #
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE, ...)
 
   tryCatch({
-    msg == ""
+    assert_that(msg == "")
   },
   error = function(e) {
     message(msg)
@@ -345,7 +343,7 @@ smbinning.custom <- function(df, y, x, cuts) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE)
   tryCatch({
-    msg == ""
+    assert_that(msg == "")
   },
   error = function(e) {
     message(msg)

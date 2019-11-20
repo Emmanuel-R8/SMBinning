@@ -1,6 +1,5 @@
 #' @include error_checking.R
 
-
 # Begin Metrics
 #' Performance Metrics for a Classification Model
 #'
@@ -43,6 +42,7 @@ smbinning.metrics <- function(dataset,
                               report = 1,
                               plot = "none",
                               returndf = 0) {
+
   # Find Column for actualclass
   i <- which(names(dataset) == actualclass)
 
@@ -50,7 +50,7 @@ smbinning.metrics <- function(dataset,
   j <- which(names(dataset) == prediction)
 
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assert_that(is.data.frame(df))
   },
   error = function(e) {
     message("Data df not a dataframe.")
@@ -504,7 +504,7 @@ smbinning.psi <- function(df, y, x) {
   j <- which(names(df) == y)
 
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assert_that(is.data.frame(df))
   },
   error = function(e) {
     message("Data df not a dataframe.")
