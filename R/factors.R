@@ -22,10 +22,15 @@
 #' result$ivtable
 #' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
+
+  require(gsubfn)
+  require(partykit)
+  require(sqldf)
+
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE, ...)
   tryCatch({
-    assertthat::msg == ""
+    msg == ""
   },
   error = function(e) {
     message(msg)

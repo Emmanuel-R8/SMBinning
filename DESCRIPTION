@@ -14,12 +14,18 @@ Description: A set of functions to build a scoring model from beginning to end, 
     transforms logistic coefficients into points for a better business understanding and 
     calculates and visualizes classic performance metrics of a classification model.
 Imports:
+    tcltk,
+    stats,
+    graphics,
+    grDevices,
+    utils
     sqldf,
+    Matrix,
     partykit,
+    nlme,
     Formula,
     gsubfn,
     tidyverse,
-    stringr,
     assertthat
 License: GPL (>= 2)
 LazyData: true

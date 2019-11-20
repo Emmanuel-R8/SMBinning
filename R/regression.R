@@ -39,10 +39,10 @@
 smbinning.eda <- function(df, rounding = 3, pbar = 1) {
   # Check data frame and formats
   tryCatch({
-    assertthat::assert_that(is.data.frame(df))
+    assert_that(is.data.frame(df) & !is_tibble(df))
   },
   error = function(e) {
-    message("Data df not a dataframe.")
+    message("Data df not a dataframe (tibble not supported)")
     return(NA)
   })
 
@@ -199,39 +199,51 @@ smbinning.logitrank <- function(y, chr, df) {
     v <- t(combn(chr, k))
     nrow <- nrow(v)
     ncol <- ncol(v)
-    fnext <- c() # Empty list for 1 set of combinations
-    attnext <- c() # Empty list for 1 set of characteristics
+
+    # Empty list for 1 set of combinations
+    fnext <- c()
+
+    # Empty list for 1 set of characteristics
+    attnext <- c()
     for (j in 1:nrow) {
       ftmp <- paste0(y, " ~ ", v[j, 1])
       atttmp <- v[j, 1]
+
+      # If more than one column
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp <- paste0(ftmp, paste0("+", c(v[j, ])[i]))
-          atttmp <- paste0(atttmp, paste0("+", c(v[j, ])[i]))
+          ftmp <- paste0(ftmp, paste0("+", c(v[j,])[i]))
+          atttmp <- paste0(atttmp, paste0("+", c(v[j,])[i]))
         } # End columns
-      } # End if more than 1 column
+      }
+
       fnext <- c(ftmp, fnext)
       attnext <- c(atttmp, attnext)
     } # End rows
     f <- c(f, fnext)
     att <- c(att, attnext)
   }
+
   # List attributes
   chrsum <- data.frame(character(0), numeric(0), numeric(0))
+
+  # Intercept Only
   model <- glm(paste0(y, " ~ 1"),
                family = binomial(link = 'logit'),
-               data = df) # Intercept Only
+               data = df)
   chrsum <-
     rbind(chrsum, cbind(c("Intercept Only"), c(model$aic), c(model$deviance)))
+
   for (i in 1:length(f)) {
     model <- glm(f[i], family = binomial(link = 'logit'), data = df)
     chrsum <-
       rbind(chrsum, cbind(c(att[i]), c(model$aic), c(model$deviance)))
   }
+
   colnames(chrsum) <- c("Characteristics", "AIC", "Deviance")
   chrsum$AIC <- as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance <- as.numeric(as.character(chrsum$Deviance))
-  chrsum <- chrsum[order(chrsum$AIC), ]
+  chrsum <- chrsum[order(chrsum$AIC),]
 
   return(chrsum)
 }
@@ -418,7 +430,7 @@ smbinning.scaling <- function(logitraw,
     FullName <- c("(Intercept)", FullName)
     bincoeff$FullName <-
       factor(bincoeff$FullName, levels = FullName)
-    bincoeff <- bincoeff[order(bincoeff$FullName), ]
+    bincoeff <- bincoeff[order(bincoeff$FullName),]
     #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
     # Create attributes
@@ -447,7 +459,7 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts <- bincoeff
     chrpts <- chrpts[, c("Characteristic", "Points")]
-    chrpts <- chrpts[-1, ] # Remove (intercept)
+    chrpts <- chrpts[-1,] # Remove (intercept)
     minmaxscore <-
       c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
         sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
@@ -528,7 +540,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
       for (j in 1:nrow(chrattptstmp)) {
         df <- within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                       chrattptstmp[j, ][3])
+                       chrattptstmp[j,][3])
       }
       # df$chrtmporiginal=NULL
       df$chrtmp <- as.numeric(df$chrtmp)
@@ -569,8 +581,3 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
   return(df)
 }
 # End Add Points and Score
-
-
-
-
-

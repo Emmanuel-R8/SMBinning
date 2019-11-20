@@ -13,6 +13,8 @@
 #' for each numeric and factor characteristic in the dataset.
 #' @export
 smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
+  require(assertthat)
+
   # Check sumivt is a dataframe
   tryCatch({
     assertthat::assert_that(is.data.frame(sumivt))
@@ -27,8 +29,8 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     return("Not from smbinning.sumiv")
   }
   sumivtplot <- sumivt
-  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV), ]
-  sumivtplot <- sumivtplot[order(sumivtplot$IV), ]
+  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV),]
+  sumivtplot <- sumivtplot[order(sumivtplot$IV),]
   sumivtplot <- cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
@@ -135,6 +137,7 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
     )
     abline(h = 0)
     mtext(sub, 3)
+
   } else if (option == "badrate") {
     # Bad Rate
     x_upper <- nrow(ivout$ivtable) - r
@@ -157,6 +160,7 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
     )
     abline(h = 0)
     mtext(sub, 3)
+
   } else if (option == "WoE") {
     # WoE
     x_upper <- nrow(ivout$ivtable) - r
@@ -217,6 +221,7 @@ smbinning.metrics.plot <-
       return("Data not from smbinning.metrics.")
 
     } else if (!is.na(cutoff) & !is.numeric(cutoff)) {
+
       # Check if target variable is numeric
       return("'cutoff' must be numeric.")
 
@@ -233,7 +238,7 @@ smbinning.metrics.plot <-
 
     } else {
       df$YoudenJ <- df$Sensitivity + df$Specificity - 1
-      optcut <- df[df$YoudenJ == max(df$YoudenJ),]$Prediction
+      optcut <- df[df$YoudenJ == max(df$YoudenJ), ]$Prediction
       df$YoudenJ <- NULL
 
       # If cutoff is specified
@@ -247,10 +252,10 @@ smbinning.metrics.plot <-
 
 
       # Confusion Matrix Components
-      tp <- df[df$Prediction == optcut,]$CumDescGood
-      fp <- df[df$Prediction == optcut,]$CumDescBad
-      fn <- df[df$Prediction == optcut,]$FN
-      tn <- df[df$Prediction == optcut,]$TN
+      tp <- df[df$Prediction == optcut, ]$CumDescGood
+      fp <- df[df$Prediction == optcut, ]$CumDescBad
+      fn <- df[df$Prediction == optcut, ]$FN
+      tn <- df[df$Prediction == optcut, ]$TN
 
       p <- sum(df$CntGood)
       n <- sum(df$CntBad)
@@ -265,6 +270,7 @@ smbinning.metrics.plot <-
       invprecision <- tn / (fn + tn)
       FDR <- fp / (tp + fp)
       FOR <- fn / (fn + tn)
+
       # For AUC Calculation (Trapezoid Method)
       df$TPR <- df$Sensitivity
       df$FPR <- 1 - df$Specificity
@@ -272,10 +278,12 @@ smbinning.metrics.plot <-
       a <- which(names(df) == "MgAUC")
       f <- which(names(df) == "FPR")
       t <- which(names(df) == "TPR")
+
       for (i in 1:nrow(df) - 1) {
         df[i, a] <-
           0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
       }
+
       # AUC
       auc <- sum(df$MgAUC)
       df$TPR <- NULL
@@ -299,9 +307,12 @@ smbinning.metrics.plot <-
       # CM, where X-axis is actual class
       if (plot == "cmactual") {
         cmnbrplot <- cmnbr
-        colnames(cmnbrplot) <-
-          c("Actual+\n[ TP | FN ]", "Actual-\n[ FP | TN ]") # Actuals
-        rownames(cmnbrplot) <- c("Model+", "Model-") # Model
+
+        # Actuals
+        colnames(cmnbrplot) <- c("Actual+\n[ TP | FN ]", "Actual-\n[ FP | TN ]")
+
+        # Model
+        rownames(cmnbrplot) <- c("Model+", "Model-")
         bpactual =
           barplot(
             cmnbrplot,
@@ -338,7 +349,9 @@ smbinning.metrics.plot <-
           cex = 1,
           font = 2
         )
-        abline(h = 0) # Horizontal line
+
+        # Horizontal line
+        abline(h = 0)
         text(
           x = bpactual,
           y = cmnbrplot,
@@ -352,10 +365,14 @@ smbinning.metrics.plot <-
       # CM Percentages, where X-axis is actual class
       if (plot == "cmactualrates") {
         cmpctactualplot <- cmpctactual
+
+        # Actuals
         colnames(cmpctactualplot) <-
           c("Actual+\n[ Sensitivity | FNR ]",
-            "Actual-\n[ FPR | Specificity ]") # Actuals
-        rownames(cmpctactualplot) <- c("Model+", "Model-") # Model
+            "Actual-\n[ FPR | Specificity ]")
+
+        # Model
+        rownames(cmpctactualplot) <- c("Model+", "Model-")
         bpactualpct =
           barplot(
             cmpctactualplot,
@@ -405,9 +422,13 @@ smbinning.metrics.plot <-
       # CM Numbers, where X-axis is model prediction
       if (plot == "cmmodel") {
         cmnbrplot <- cmnbr
-        colnames(cmnbrplot) <- c("Actual+", "Actual-") # Actuals
+
+        # Actuals
+        colnames(cmnbrplot) <- c("Actual+", "Actual-")
+
+        # Model
         rownames(cmnbrplot) <-
-          c("Model+\n[ TP | FP ]", "Model-\n [ FN | TN ]") # Model
+          c("Model+\n[ TP | FP ]", "Model-\n [ FN | TN ]")
         bpmodel =
           barplot(
             t(cmnbrplot),
@@ -444,7 +465,9 @@ smbinning.metrics.plot <-
           cex = 1,
           font = 2
         )
-        abline(h = 0) # Horizontal line
+
+        # Horizontal line
+        abline(h = 0)
         text(
           x = bpmodel,
           y = t(cmnbrplot),
@@ -457,9 +480,13 @@ smbinning.metrics.plot <-
       # CM Numbers, where X-axis is model prediction
       if (plot == "cmmodelrates") {
         cmpctmodelplot <- cmpctmodel
+
+        # Actuals
         colnames(cmpctmodelplot) <-
-          c("Model+\n[ PPV | FDR ]", "Model-\n[ FOR | NPV ]") # Actuals
-        rownames(cmpctmodelplot) <- c("Actual+", "Actual-") # Model
+          c("Model+\n[ PPV | FDR ]", "Model-\n[ FOR | NPV ]")
+
+        # Model
+        rownames(cmpctmodelplot) <- c("Actual+", "Actual-")
         bpactualpct =
           barplot(
             cmpctmodelplot,
@@ -496,7 +523,9 @@ smbinning.metrics.plot <-
           cex = 1,
           font = 2
         )
-        abline(h = 0) # Horizontal line
+
+        # Horizontal line
+        abline(h = 0)
         text(
           x = bpactualpct,
           y = cmpctmodelplot,
@@ -510,4 +539,3 @@ smbinning.metrics.plot <-
   }
 
 # End: Metrics Plot
-

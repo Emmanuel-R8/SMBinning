@@ -32,10 +32,18 @@
 #' result$ctree # Decision tree
 #' @export
 smbinning <- function(df, y, x, p = 0.05) {
+
+  require(assertthat)
+  require(gsubfn)
+  require(partykit)
+  require(sqldf)
+
+  #
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE, ...)
+
   tryCatch({
-    assertthat::msg == ""
+    msg == ""
   },
   error = function(e) {
     message(msg)
@@ -43,7 +51,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
   tryCatch({
-    assertthat::assert_that(between(p, 0.0, 0.5))
+    assert_that(between(p, 0.0, 0.5))
   },
   error = function(e) {
     message("p must be greater than 0 and lower than 0.5 (50%).")
@@ -51,7 +59,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   })
 
 
-  ctree <- partykit::ctree(
+  ctree <- ctree(
     formula(paste(y, "~", x)),
     data = df,
     na.action = na.exclude,
@@ -60,9 +68,9 @@ smbinning <- function(df, y, x, p = 0.05) {
     ))))
   )
 
-  bins <- partykit::width(ctree)
+  bins <- width(ctree)
   tryCatch({
-    assertthat::assert_that(bins >= 2)
+    assert_that(bins >= 2)
   },
   warning = function(e) {
     message("No significant splits.")
@@ -82,7 +90,7 @@ smbinning <- function(df, y, x, p = 0.05) {
   }
 
   # Sort / converts to a ordered vector (asc)
-  cutvct <- cutvct[order(cutvct[, 1]),]
+  cutvct <- cutvct[order(cutvct[, 1]), ]
 
   # Round to 4 dec. to avoid borderline cases
   cutvct <-  ifelse(cutvct < 0,
@@ -276,7 +284,8 @@ smbinning <- function(df, y, x, p = 0.05) {
   IVTable[, 13] <- round(log(IVTable[, 3] / IVTable[, 4]) - LnGB, 4)
 
   # Mg IV
-  IVTable[, 14] <-round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4)
+  IVTable[, 14] <-
+    round(IVTable[, 13] * (IVTable[, 3] / G - IVTable[, 4] / B), 4)
   # ivt[i+2,14]=round(sum(ivt[,13]*(ivt[,3]/G-ivt[,4]/B),na.rm=T),4) -- Old Calculation
 
   # Calculates Information Value even with undefined numbers
@@ -357,7 +366,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     cutvct <- rbind(cutvct, cuts[i])
   }
   cutvct <-
-    cutvct[order(cutvct[, 1]), ] # Sort / converts to a ordered vector (asc)
+    cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
   cutvct <- ifelse(cutvct < 0,
                    trunc(10000 * cutvct) / 10000,
                    ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
@@ -630,4 +639,3 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
   return(df)
 }
 # End Gen Characteristic
-
