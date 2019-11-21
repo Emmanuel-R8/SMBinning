@@ -1,6 +1,5 @@
 
 
-
 #' Weight of Evidence and Information Value for a continuous variable
 #'
 #' @param df Dataframe containing the two columns of data
@@ -9,8 +8,8 @@
 #' @param p  Parameter for the Conditional Recuresive Tree used (see `partykit`)
 #' @param verbose Boolean to add additional information. Default is FALSE
 #'
-#' @return A tibble containing the bins with detailed information. The total information value
-#' is obtained by summing the `IV` column (sum(resultTibble$IV))
+#' @return A list with the total Information Value, and a tibble containing the bins with detailed
+#'  information.
 #'
 #' @import checkmate
 #' @import tidyverse
@@ -180,5 +179,5 @@ BinTableContinuous <- function(df, x, y, p = 0.05, verbose = FALSE) {
   # Remove the first -Infinity cut point
   result <- result %>% slice(2:n())
 
-  return(result)
+  return( list( IV = sum(result$IV), table = result ))
 }
