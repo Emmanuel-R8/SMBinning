@@ -27,18 +27,18 @@ smbinning.scoring.sql <- function(smbscaled) {
       unique(logitscaleddf$Characteristic) # Characteristics
     codecreate <- list()
     codecreate <- c(codecreate,
-                    paste("-- Replace 'TableName' with your table in SQL \n"))
+      paste("-- Replace 'TableName' with your table in SQL \n"))
     codecreate <-
       c(codecreate, "alter table TableName add \n") # First line of the sql code
     for (i in 1:length(uniquechctrs)) {
       pointname <- paste(uniquechctrs[[i]], "Points", sep = "")
       codecreate <-
         c(codecreate, paste(pointname, "int not null, \n", sep =
-                              ' '))
+          " "))
     }
     codecreate <-
-      c(codecreate, paste("Score", "int not null \n", sep = ' '))
-    codecreate <- c(codecreate, paste("go \n", sep = ' '))
+      c(codecreate, paste("Score", "int not null \n", sep = " "))
+    codecreate <- c(codecreate, paste("go \n", sep = " "))
 
     sqlcreate <- character()
     for (i in 1:length(codecreate)) {
@@ -48,26 +48,26 @@ smbinning.scoring.sql <- function(smbscaled) {
     # SQL code 2: Update table
     codeupdate <- list()
     codeupdate <- c(codeupdate,
-                    paste("\n-- Replace 'TableName' with your table in SQL \n"))
+      paste("\n-- Replace 'TableName' with your table in SQL \n"))
     codeupdate <- c(codeupdate, paste("update TableName set \n"))
     for (i in 1:length(uniquechctrs)) {
       subdf <- subset(logitscaleddf,
-                      logitscaleddf$Characteristic == uniquechctrs[i])
+        logitscaleddf$Characteristic == uniquechctrs[i])
       pointname <- paste(uniquechctrs[[i]], "Points", sep = "")
       codeupdate <- c(codeupdate, pointname, "=", "( \n", sep = " ")
       codeupdate <- c(codeupdate, "case \n")
       for (j in 1:dim(subdf)[1]) {
         codeupdate <- c(codeupdate,
-                        paste(
-                          " when",
-                          subdf[["Characteristic"]][j],
-                          paste("= ", "'", gsub("'", "''", subdf[["Attribute"]][j]), "'", sep =
-                                  ""),
-                          "then",
-                          subdf[["Points"]][j],
-                          " \n",
-                          sep = " "
-                        ))
+          paste(
+            " when",
+            subdf[["Characteristic"]][j],
+            paste("= ", "'", gsub("'", "''", subdf[["Attribute"]][j]), "'", sep =
+              ""),
+            "then",
+            subdf[["Points"]][j],
+            " \n",
+            sep = " "
+        ))
       }
       codeupdate <- c(codeupdate, " else Null end \n ), \n")
     }
@@ -105,18 +105,18 @@ smbinning.scoring.sql <- function(smbscaled) {
 #' library(smbinning)
 #'
 #' # Example 1: Binning a numeric variable
-#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
+#' result <- smbinning(df = smbsimdf1, y = "fgood", x = "cbs1") # Run and save result
 #' smbinning.sql(result)
 #'
 #' # Example 2: Binning for a factor variable
-#' result=smbinning.factor(df=smbsimdf1,x="inc",y="fgood",maxcat=11)
+#' result <- smbinning.factor(df = smbsimdf1, x = "inc", y = "fgood", maxcat = 11)
 #' smbinning.sql(result)
 #'
 #' # Example 3: Customized binning for a factor variable
-#' result=smbinning.factor.custom(
-#'   df=smbsimdf1,x="inc",y="fgood",
-#'   c("'W01','W02'","'W03','W04','W05'",
-#'     "'W06','W07'","'W08','W09','W10'"))
+#' result <- smbinning.factor.custom(
+#'   df = smbsimdf1, x = "inc", y = "fgood",
+#'   c("'W01','W02'", "'W03','W04','W05'",
+#'     "'W06','W07'", "'W08','W09','W10'"))
 #' smbinning.sql(result)
 #' @export
 smbinning.sql <- function(ivout) {
@@ -225,6 +225,3 @@ smbinning.sql <- function(ivout) {
   }
 }
 # End: SQL Code
-
-
-

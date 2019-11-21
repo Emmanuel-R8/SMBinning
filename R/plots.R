@@ -16,21 +16,22 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
   require(assertthat)
 
   # Check sumivt is a dataframe
-  tryCatch({
-    assert_that(is.data.frame(sumivt))
-  },
-  error = function(e) {
-    message("Data sumivt not a dataframe.")
-    return(NA)
-  })
+  tryCatch(
+    {
+      assert_that(is.data.frame(sumivt))
+    },
+    error = function(e) {
+      message("Data sumivt not a dataframe.")
+      return(NA)
+    })
 
   if (names(sumivt[1]) != "Char" |
-      names(sumivt[2]) != "IV") {
+    names(sumivt[2]) != "IV") {
     return("Not from smbinning.sumiv")
   }
   sumivtplot <- sumivt
-  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV),]
-  sumivtplot <- sumivtplot[order(sumivtplot$IV),]
+  sumivtplot <- sumivtplot[complete.cases(sumivtplot$IV), ]
+  sumivtplot <- sumivtplot[order(sumivtplot$IV), ]
   sumivtplot <- cbind(sumivtplot, Desc = ifelse(
     sumivtplot$IV >= 0.3,
     "1:Strong",
@@ -43,7 +44,7 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
     main = "Information Value",
     labels = sumivtplot$Char,
     pch = ifelse(sumivtplot$IV >= 0.3, 21, ifelse(sumivtplot$IV >=
-                                                    0.1, 21, 1)),
+      0.1, 21, 1)),
     color = ifelse(
       sumivtplot$IV >= 0.3,
       "black",
@@ -76,21 +77,21 @@ smbinning.sumiv.plot <- function(sumivt, cex = 0.9) {
 #' library(smbinning)
 #'
 #' # Example 1: Numeric variable (1 page, 4 plots)
-#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
-#' par(mfrow=c(2,2))
-#' boxplot(smbsimdf1$cbs1~smbsimdf1$fgood,
-#'         horizontal=TRUE, frame=FALSE, col="lightgray",main="Distribution")
-#' mtext("Credit Score",3)
-#' smbinning.plot(result,option="dist",sub="Credit Score")
-#' smbinning.plot(result,option="badrate",sub="Credit Score")
-#' smbinning.plot(result,option="WoE",sub="Credit Score")
-#' par(mfrow=c(1,1))
+#' result <- smbinning(df = smbsimdf1, y = "fgood", x = "cbs1") # Run and save result
+#' par(mfrow = c(2, 2))
+#' boxplot(smbsimdf1$cbs1 ~ smbsimdf1$fgood,
+#'   horizontal = TRUE, frame = FALSE, col = "lightgray", main = "Distribution")
+#' mtext("Credit Score", 3)
+#' smbinning.plot(result, option = "dist", sub = "Credit Score")
+#' smbinning.plot(result, option = "badrate", sub = "Credit Score")
+#' smbinning.plot(result, option = "WoE", sub = "Credit Score")
+#' par(mfrow = c(1, 1))
 #'
 #' # Example 2: Factor variable (1 plot per page)
-#' result=smbinning.factor(df=smbsimdf1,y="fgood",x="inc",maxcat=11)
-#' smbinning.plot(result,option="dist",sub="Income Level")
-#' smbinning.plot(result,option="badrate",sub="Income Level")
-#' smbinning.plot(result,option="WoE",sub="Income Level")
+#' result <- smbinning.factor(df = smbsimdf1, y = "fgood", x = "inc", maxcat = 11)
+#' smbinning.plot(result, option = "dist", sub = "Income Level")
+#' smbinning.plot(result, option = "badrate", sub = "Income Level")
+#' smbinning.plot(result, option = "WoE", sub = "Income Level")
 #' @export
 smbinning.plot <- function(ivout, option = "dist", sub = "") {
   r <- ifelse(ivout$ivtable[nrow(ivout$ivtable) - 1, 2] == 0, 2, 1)
@@ -203,17 +204,17 @@ smbinning.plot <- function(ivout, option = "dist", sub = "") {
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning)
-#' smbmetricsdf=smbinning.metrics(dataset=smbsimdf1, prediction="cbs1",
-#'                                actualclass="fgood", returndf=1)
+#' smbmetricsdf <- smbinning.metrics(dataset = smbsimdf1, prediction = "cbs1",
+#'   actualclass = "fgood", returndf = 1)
 #'
 #' # Example 1: Plots based on optimal cutoff
-#' smbinning.metrics.plot(df=smbmetricsdf,plot='cmactual')
+#' smbinning.metrics.plot(df = smbmetricsdf, plot = "cmactual")
 #'
 #' # Example 2: Plots using user defined cutoff
-#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactual')
-#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactualrates')
-#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodel')
-#' smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodelrates')
+#' smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmactual")
+#' smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmactualrates")
+#' smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmmodel")
+#' smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmmodelrates")
 #' @export
 smbinning.metrics.plot <-
   function(df, cutoff = NA, plot = "cmactual") {
@@ -226,14 +227,14 @@ smbinning.metrics.plot <-
       return("'cutoff' must be numeric.")
 
     } else if (!is.na(cutoff) &
-               (max(df$Prediction) < cutoff |
-                min(df$Prediction) > cutoff)) {
+      (max(df$Prediction) < cutoff |
+        min(df$Prediction) > cutoff)) {
       # Check if target variable is numeric
       return("'cutoff' out of range.")
 
     } else if (plot != "cmactual" &
-               plot != "cmactualrates" & plot != "cmmodel" &
-               plot != "cmmodelrates") {
+      plot != "cmactualrates" & plot != "cmmodel" &
+      plot != "cmmodelrates") {
       return("'plot' options are: 'auc', 'ks' or 'none'.")
 
     } else {
@@ -298,11 +299,11 @@ smbinning.metrics.plot <-
       # Classification Matrix
       cmnbr <- matrix(c(tp, fn, fp, tn), nrow = 2, ncol = 2)
       cmpctactual <- matrix(c(sensitivity, FNR, FPR, specificity),
-                            nrow = 2,
-                            ncol = 2)
+        nrow = 2,
+        ncol = 2)
       cmpctmodel <- matrix(c(precision, FDR, FOR, invprecision),
-                           nrow = 2,
-                           ncol = 2)
+        nrow = 2,
+        ncol = 2)
 
       # CM, where X-axis is actual class
       if (plot == "cmactual") {
@@ -313,7 +314,7 @@ smbinning.metrics.plot <-
 
         # Model
         rownames(cmnbrplot) <- c("Model+", "Model-")
-        bpactual =
+        bpactual <-
           barplot(
             cmnbrplot,
             ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
@@ -373,7 +374,7 @@ smbinning.metrics.plot <-
 
         # Model
         rownames(cmpctactualplot) <- c("Model+", "Model-")
-        bpactualpct =
+        bpactualpct <-
           barplot(
             cmpctactualplot,
             ylim = c(0, 1),
@@ -429,7 +430,7 @@ smbinning.metrics.plot <-
         # Model
         rownames(cmnbrplot) <-
           c("Model+\n[ TP | FP ]", "Model-\n [ FN | TN ]")
-        bpmodel =
+        bpmodel <-
           barplot(
             t(cmnbrplot),
             ylim = c(0, round(1.25 * max(cmnbrplot), 0)),
@@ -487,7 +488,7 @@ smbinning.metrics.plot <-
 
         # Model
         rownames(cmpctmodelplot) <- c("Actual+", "Actual-")
-        bpactualpct =
+        bpactualpct <-
           barplot(
             cmpctmodelplot,
             ylim = c(0, 1),

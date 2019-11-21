@@ -40,24 +40,26 @@
 #'
 #' # Table with basic statistics
 #' smbinning.eda(smbsimdf1,
-#'               rounding = 3)$eda
+#'   rounding = 3
+#' )$eda
 #'
 #' # Table with basic percentages
 #' smbinning.eda(smbsimdf1,
-#'               rounding = 3)$edapct
+#'   rounding = 3
+#' )$edapct
 #' @export
 smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
 
-  requireNamespace("assertthat")
-
   # Check data frame and formats
-  tryCatch({
-    assert_that(is.data.frame(df) & !is_tibble(df))
-  },
-  error = function(e) {
-    message("Data df not a dataframe (tibble not supported)")
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(is.data.frame(df) & !is_tibble(df))
+    },
+    error = function(e) {
+      message("Data df not a dataframe (tibble not supported)")
+      return(NA)
+    }
+  )
 
   ncol <- ncol(df)
   nrow <- nrow(df)
@@ -207,15 +209,13 @@ smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
 #' library(smbinning)
 #'
 #' # Example: Best combination of characteristics
-#' smbinning.logitrank(y = "fgood",
-#'                     chr = c("chr1","chr2","chr3"),
-#'                     df = smbsimdf3)
-#'
+#' smbinning.logitrank(
+#'   y = "fgood",
+#'   chr = c("chr1", "chr2", "chr3"),
+#'   df = smbsimdf3
+#' )
 #' @export
 smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
-  requireNamespace("utils")
-  requireNamespace("stats")
-
   # Initialize empty list of formulas
   f <- c()
 
@@ -240,8 +240,8 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
       # If more than one column
       if (ncol > 1) {
         for (i in 2:ncol) {
-          ftmp <- paste0(ftmp, paste0("+", c(v[j,])[i]))
-          atttmp <- paste0(atttmp, paste0("+", c(v[j,])[i]))
+          ftmp <- paste0(ftmp, paste0("+", c(v[j, ])[i]))
+          atttmp <- paste0(atttmp, paste0("+", c(v[j, ])[i]))
         } # End columns
       }
 
@@ -261,15 +261,18 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
     startTime <- Sys.time()
   }
   model <- glm(paste0(y, " ~ 1"),
-               family = binomial(link = 'logit'),
-               data = df)
+    family = binomial(link = "logit"),
+    data = df
+  )
 
   if (verbose == TRUE) {
     cat(" Elapsed: ", Sys.time() - startTime, "\n")
   }
 
-  chrsum <- rbind(chrsum,
-                  cbind(c("Intercept Only"), c(model$aic), c(model$deviance)))
+  chrsum <- rbind(
+    chrsum,
+    cbind(c("Intercept Only"), c(model$aic), c(model$deviance))
+  )
 
 
   if (verbose == TRUE) {
@@ -278,8 +281,10 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   }
 
   for (i in 1:length(f)) {
-    if (verbose == TRUE) { cat("Variable : ", f[i], "\n") }
-    model <- glm(f[i], family = binomial(link = 'logit'), data = df)
+    if (verbose == TRUE) {
+      cat("Variable : ", f[i], "\n")
+    }
+    model <- glm(f[i], family = binomial(link = "logit"), data = df)
     chrsum <-
       rbind(chrsum, cbind(c(att[i]), c(model$aic), c(model$deviance)))
   }
@@ -291,7 +296,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   colnames(chrsum) <- c("Characteristics", "AIC", "Deviance")
   chrsum$AIC <- as.numeric(as.character(chrsum$AIC))
   chrsum$Deviance <- as.numeric(as.character(chrsum$Deviance))
-  chrsum <- chrsum[order(chrsum$AIC),]
+  chrsum <- chrsum[order(chrsum$AIC), ]
 
   return(chrsum)
 } # End smbinning.logitrank
@@ -319,56 +324,68 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
 #' pop <- smbsimdf1
 #'
 #' # Training sample
-#' train <- subset(pop,rnd <= 0.7)
+#' train <- subset(pop, rnd <= 0.7)
 #'
 #' # Generate binning object to generate variables
 #' smbcbs1 <- smbinning(train,
-#'                      x = "cbs1",
-#'                      y = "fgood")
+#'   x = "cbs1",
+#'   y = "fgood"
+#' )
 #'
 #' smbcbinq <- smbinning.factor(train,
-#'                              x = "cbinq",
-#'                              y = "fgood")
+#'   x = "cbinq",
+#'   y = "fgood"
+#' )
 #'
 #' smbcblineut <- smbinning.custom(train,
-#'                                 x = "cblineut",
-#'                                 y = "fgood",
-#'                                 cuts = c(30,40,50))
+#'   x = "cblineut",
+#'   y = "fgood",
+#'   cuts = c(30, 40, 50)
+#' )
 #'
 #' smbpmt <- smbinning.factor(train,
-#'                            x = "pmt",
-#'                            y = "fgood")
+#'   x = "pmt",
+#'   y = "fgood"
+#' )
 #'
 #' smbtob <- smbinning.custom(train,
-#'                            x = "tob",
-#'                            y = "fgood",
-#'                            cuts = c(1,2,3))
+#'   x = "tob",
+#'   y = "fgood",
+#'   cuts = c(1, 2, 3)
+#' )
 #'
 #' smbdpd <- smbinning.factor(train,
-#'                            x = "dpd",
-#'                            y = "fgood")
+#'   x = "dpd",
+#'   y = "fgood"
+#' )
 #'
 #' smbdep <- smbinning.custom(train,
-#'                            x = "dep",
-#'                            y = "fgood",
-#'                            cuts = c(10000,12000,15000))
+#'   x = "dep",
+#'   y = "fgood",
+#'   cuts = c(10000, 12000, 15000)
+#' )
 #'
 #' smbod <- smbinning.factor(train,
-#'                           x = "od",
-#'                           y = "fgood")
+#'   x = "od",
+#'   y = "fgood"
+#' )
 #'
 #' smbhome <- smbinning.factor(train,
-#'                             x = "home",
-#'                             y = "fgood")
+#'   x = "home",
+#'   y = "fgood"
+#' )
 #'
 #' smbinc <- smbinning.factor.custom(train,
-#'                                   x = "inc",
-#'                                   y = "fgood",
-#'                                   c("'W01','W02'","'W03','W04','W05'",
-#'                                   "'W06','W07'","'W08','W09','W10'"))
+#'   x = "inc",
+#'   y = "fgood",
+#'   c(
+#'     "'W01','W02'", "'W03','W04','W05'",
+#'     "'W06','W07'", "'W08','W09','W10'"
+#'   )
+#' )
 #'
-# Generate new characteristics and update population dataset
-#' pop <- smbinning.gen(pop,smbcbs1, "g1cbs1")
+#' # Generate new characteristics and update population dataset
+#' pop <- smbinning.gen(pop, smbcbs1, "g1cbs1")
 #' pop <- smbinning.factor.gen(pop, smbcbinq, "g1cbinq")
 #' pop <- smbinning.gen(pop, smbcblineut, "g1cblineut")
 #' pop <- smbinning.factor.gen(pop, smbpmt, "g1pmt")
@@ -384,21 +401,23 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
 #' train <- subset(pop, rnd <= 0.7)
 #'
 #' # Testing sample
-#' test <- subset(pop,rnd > 0.7)
+#' test <- subset(pop, rnd > 0.7)
 #'
 #' # Run logistic regression
 #' f <- fgood ~ g1cbs1 + g1cbinq + g1cblineut + g1pmt + g1tob + g1dpd + g1dep + g1od + g1home + g1inc
 #'
 #' modlogisticsmb <- glm(f,
-#'                       data  =  train,
-#'                       family  =  binomial())
+#'   data = train,
+#'   family = binomial()
+#' )
 #' summary(modlogisticsmb)
 #'
 #' # Example: Scaling from logistic parameters to points
 #' smbscaled <- smbinning.scaling(modlogisticsmb,
-#'                                pdo = 20,
-#'                                score = 720,
-#'                                odds = 99)
+#'   pdo = 20,
+#'   score = 720,
+#'   odds = 99
+#' )
 #'
 #' # Scaled model
 #' smbscaled$logitscaled
@@ -417,12 +436,12 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
 #'
 #' # Example Generate SQL code from scaled model
 #' smbinning.scoring.sql(smbscaled)
-#'
 #' @export
 smbinning.scaling <- function(logitraw,
                               pdo = 20,
                               score = 720,
                               odds = 99) {
+
   if (missing(logitraw)) {
     return(stop("Logistic model missing."))
   }
@@ -448,13 +467,13 @@ smbinning.scaling <- function(logitraw,
     return(stop("PDO must be positive integer"))
   }
   else if (all.equal(score, as.integer(score)) != TRUE |
-           score < 0) {
+    score < 0) {
     return(stop("score must be positive integer"))
   }
   else if (all.equal(odds, as.integer(odds)) != TRUE | odds < 0) {
     return(stop("Odds must be positive integer"))
   }
-  else{
+  else {
     # Number of characteristics
     nchr <- length(logitraw$xlevels)
 
@@ -521,7 +540,9 @@ smbinning.scaling <- function(logitraw,
     scorebychr <- (interceptbychr) + (offsetbychr)
 
     # Updating the bincoeff into a dataframe
-    bincoeff <- data.frame(sapply(bincoeff, function(x) {x[[1]]}))
+    bincoeff <- data.frame(sapply(bincoeff, function(x) {
+      x[[1]]
+    }))
     colnames(bincoeff) <- "Coefficient"
     bincoeff <- cbind(rownames(bincoeff), bincoeff)
     bincoeff$Weight <- (bincoeff$Coefficient) * (factor)
@@ -530,19 +551,21 @@ smbinning.scaling <- function(logitraw,
     # Make scaled constant equal to zero
     bincoeff[1, 4] <- 0.000
     bincoeff$Points <- round(bincoeff$WeightScaled, 0)
-    colnames(bincoeff) <- c("FullName",
-                            "Coefficient",
-                            "Weight",
-                            "WeightScaled",
-                            "Points")
+    colnames(bincoeff) <- c(
+      "FullName",
+      "Coefficient",
+      "Weight",
+      "WeightScaled",
+      "Points"
+    )
 
     # Sorting bincoeff
     FullName <- unlist(chrbinname)
     FullName <- c("(Intercept)", FullName)
     bincoeff$FullName <-
       factor(bincoeff$FullName, levels = FullName)
-    bincoeff <- bincoeff[order(bincoeff$FullName),]
-    #bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
+    bincoeff <- bincoeff[order(bincoeff$FullName), ]
+    # bincoeff=within(bincoeff, WeightScaled[FullName=='(Intercept)']==0)
     rownames(bincoeff) <- 1:dim(bincoeff)[1]
 
     # Create attributes
@@ -554,11 +577,11 @@ smbinning.scaling <- function(logitraw,
     rownames(Attribute) <- NULL
 
     # Creating Characteristic
-    Characteristic = list()
+    Characteristic <- list()
     for (i in 1:length(FullName)) {
       # Characteristic=c(Characteristic, gsub(gsub("[[:punct:]]","",
       # as.character(Attribute[[i,1]])),"",gsub("[[:punct:]]","",FullName[i])))
-      Characteristic <- c(Characteristic, gsub("[0-9][0-9] .*$", "",  FullName[i]))
+      Characteristic <- c(Characteristic, gsub("[0-9][0-9] .*$", "", FullName[i]))
     }
     Characteristic <- unlist(Characteristic)
     Characteristic <- unname(data.frame(Characteristic))
@@ -576,12 +599,14 @@ smbinning.scaling <- function(logitraw,
     # Get Min/Max Score
     chrpts <- bincoeff
     chrpts <- chrpts[, c("Characteristic", "Points")]
-    chrpts <- chrpts[-1,]
+    chrpts <- chrpts[-1, ]
 
     # Remove (intercept)
     minmaxscore <-
-      c(sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
-        sum(aggregate(Points ~ Characteristic, chrpts, max)$Points))
+      c(
+        sum(aggregate(Points ~ Characteristic, chrpts, min)$Points),
+        sum(aggregate(Points ~ Characteristic, chrpts, max)$Points)
+      )
 
     # Converting bincoeff into a list
     bincoeff <- list(bincoeff)
@@ -631,7 +656,6 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
   # Check if logitscaled is missing or not
   if (missing(smbscaled)) {
     return(stop("Missing argument: smbscaled"))
-
   }
   # Check if dataset is missing or not
   else if (missing(dataset)) {
@@ -644,7 +668,6 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
 
   else if (names(smbscaled)[1] != "logitscaled") {
     return(stop("Not from 'smbinning.scaling'"))
-
   } else {
     df <- dataset
     logitraw <- smbscaled$logitraw
@@ -666,22 +689,23 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
 
       for (j in 1:nrow(chrattptstmp)) {
         df <- within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
-                       chrattptstmp[j,][3])
+          chrattptstmp[j, ][3])
       }
 
       # df$chrtmporiginal=NULL
       df$chrtmp <- as.numeric(df$chrtmp)
 
-      if (paste0(names(logitraw$xlevels[i]), "Points") %in% colnames(df))
-      {
-        stop("Column '",
-             paste0(
-               names(logitraw$xlevels[i]),
-               "Points' already exists. Drop it or rename it."
-             ))
+      if (paste0(names(logitraw$xlevels[i]), "Points") %in% colnames(df)) {
+        stop(
+          "Column '",
+          paste0(
+            names(logitraw$xlevels[i]),
+            "Points' already exists. Drop it or rename it."
+          )
+        )
       }
 
-      names(df)[names(df) == "chrtmp"] = paste(chrname, "Points", sep = "") # Rename tmp column name to Points.
+      names(df)[names(df) == "chrtmp"] <- paste(chrname, "Points", sep = "") # Rename tmp column name to Points.
     }
 
     # Create final score
@@ -701,8 +725,10 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
     crhpts <- list()
     for (i in 1:length(logitraw$xlevels)) {
       crhpts <-
-        cbind(crhpts, paste(names(logitraw$xlevels[i]), "Points", sep =
-                              ""))
+        cbind(crhpts, paste(names(logitraw$xlevels[i]), "Points",
+          sep =
+            ""
+        ))
     }
 
     # Number of new generated chars

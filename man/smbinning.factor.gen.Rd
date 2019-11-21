@@ -23,19 +23,20 @@ It generates a data frame with a new predictive characteristic from a factor var
 \examples{
 # Load library and its dataset
 library(smbinning) # Load package and its data
-pop=smbsimdf1 # Set population
-train=subset(pop,rnd<=0.7) # Training sample
+pop <- smbsimdf1 # Set population
+train <- subset(pop, rnd <= 0.7) # Training sample
 
 # Binning a factor variable on training data
-result=smbinning.factor(train,x="home",y="fgood")
+result <- smbinning.factor(train, x = "home", y = "fgood")
 
 # Example: Append new binned characteristic to population
-pop=smbinning.factor.gen(pop,result,"g1home")
+pop <- smbinning.factor.gen(pop, result, "g1home")
 
 # Split training
-train=subset(pop,rnd<=0.7) # Training sample
+train <- subset(pop, rnd <= 0.7) # Training sample
 
 # Check new field counts
 table(train$g1home)
 table(pop$g1home)
+# Updated 20170910
 }

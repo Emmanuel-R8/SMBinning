@@ -26,32 +26,41 @@
 #' library(smbinning) # Load package and its data
 #'
 #' # Example: Metrics Credit Score 1
-#' smbinning.metrics(dataset=smbsimdf1,
-#'                   prediction="cbs1",
-#'                   actualclass="fgood",
-#'                   report=1) # Show report
-#' smbinning.metrics(dataset=smbsimdf1,
-#'                   prediction="cbs1",
-#'                   actualclass="fgood",
-#'                   cutoff=600,
-#'                   report=1) # User cutoff
-#' smbinning.metrics(dataset=smbsimdf1,
-#'                   prediction="cbs1",
-#'                   actualclass="fgood",
-#'                   report=0,
-#'                   plot="auc") # Plot AUC
-#' smbinning.metrics(dataset=smbsimdf1,
-#'                   prediction="cbs1",
-#'                   actualclass="fgood",
-#'                   report=0, plot="ks") # Plot KS
+#' smbinning.metrics(
+#'   dataset = smbsimdf1,
+#'   prediction = "cbs1",
+#'   actualclass = "fgood",
+#'   report = 1
+#' ) # Show report
+#' smbinning.metrics(
+#'   dataset = smbsimdf1,
+#'   prediction = "cbs1",
+#'   actualclass = "fgood",
+#'   cutoff = 600,
+#'   report = 1
+#' ) # User cutoff
+#' smbinning.metrics(
+#'   dataset = smbsimdf1,
+#'   prediction = "cbs1",
+#'   actualclass = "fgood",
+#'   report = 0,
+#'   plot = "auc"
+#' ) # Plot AUC
+#' smbinning.metrics(
+#'   dataset = smbsimdf1,
+#'   prediction = "cbs1",
+#'   actualclass = "fgood",
+#'   report = 0, plot = "ks"
+#' ) # Plot KS
 #'
 #' # Save table with all details of metrics
-#' cbs1metrics <- smbinning.metrics(dataset=smbsimdf1,
-#'                                  prediction="cbs1",
-#'                                  actualclass="fgood",
-#'                                  report=0,
-#'                                  returndf=1) # Save metrics details
-#'
+#' cbs1metrics <- smbinning.metrics(
+#'   dataset = smbsimdf1,
+#'   prediction = "cbs1",
+#'   actualclass = "fgood",
+#'   report = 0,
+#'   returndf = 1
+#' ) # Save metrics details
 #' @export
 smbinning.metrics <- function(dataset,
                               prediction,
@@ -60,7 +69,6 @@ smbinning.metrics <- function(dataset,
                               report = 1,
                               plot = "none",
                               returndf = 0) {
-
   requireNamespace("assertthat")
 
   # Find Column for actualclass
@@ -69,39 +77,34 @@ smbinning.metrics <- function(dataset,
   # Find Column for prediction
   j <- which(names(dataset) == prediction)
 
-  tryCatch({
-    assert_that(is.data.frame(df))
-  },
-  error = function(e) {
-    message("Data df not a dataframe.")
-    return(NA)
-  })
+  tryCatch(
+    {
+      assert_that(is.data.frame(df))
+    },
+    error = function(e) {
+      message("Data df not a dataframe.")
+      return(NA)
+    }
+  )
 
   if (!is.na(cutoff) & !is.numeric(cutoff)) {
     return("'cutoff' must be numeric.")
-
   } else if (!is.numeric(dataset[, which(names(dataset) == prediction)])) {
     return("'prediction' not found.")
-
   } else if (max(dataset[, i], na.rm = TRUE) != 1 |
-             min(dataset[, i], na.rm = TRUE) != 0) {
+    min(dataset[, i], na.rm = TRUE) != 0) {
     return("'actualclass' must be binary (0/1).")
-
   } else if (length(unique(na.omit(dataset[, c(actualclass)]))) != 2) {
     return("'actualclass' must be binary (0/1).")
-
   } else if (report != 1 & report != 0) {
     return("'report' must be 0 (Deactivated) or 1 (Activated).")
-
   } else if (returndf != 1 & returndf != 0) {
     return("'df' must be 0 (Deactivated) or 1 (Activated).")
-
   } else if (plot != "auc" & plot != "ks" & plot != "none") {
     return("'plot' options are: 'auc', 'ks' or 'none'.")
-
   } else if (!is.na(cutoff) &
-             (max(dataset[, j], na.rm = TRUE) < cutoff |
-              min(dataset[, j], na.rm = TRUE) > cutoff)) {
+    (max(dataset[, j], na.rm = TRUE) < cutoff |
+      min(dataset[, j], na.rm = TRUE) > cutoff)) {
     return("'cutoff' out of range.")
   }
   else {
@@ -188,7 +191,7 @@ smbinning.metrics <- function(dataset,
     # Accuracy
     df$Accuracy <-
       (df$CumDescGood + df$TN) / (df$TN + df$FN + df$CumDescGood +
-                                    df$CumDescBad)
+        df$CumDescBad)
 
     # Specificity, Sensitivity
     df$Sensitivity <- df$CumDescGood / (df$CumDescGood + df$FN)
@@ -218,7 +221,6 @@ smbinning.metrics <- function(dataset,
       if ((cutoff %in% df$Prediction) == FALSE) {
         optcut <- df[which.min(abs(as.numeric(df$Prediction) - cutoff)), 1]
         optcutcomment <- paste0(" (", cutoff, " Not Found)")
-
       } else {
         optcut <- cutoff
         optcutcomment <- " (User Defined)"
@@ -244,11 +246,13 @@ smbinning.metrics <- function(dataset,
 
     # AUC Evaluation
     auceval <- ifelse(auc < 0.6, "Unpredictive",
-                      ifelse(auc < 0.7, "Poor",
-                             ifelse(
-                               auc < 0.8, "Fair",
-                               ifelse(auc < 0.9, "Good", "Excellent")
-                             )))
+      ifelse(auc < 0.7, "Poor",
+        ifelse(
+          auc < 0.8, "Fair",
+          ifelse(auc < 0.9, "Good", "Excellent")
+        )
+      )
+    )
 
     # KS
     df$MgKS <- abs(df$PctCumAscGood - df$PctCumAscBad)
@@ -260,15 +264,17 @@ smbinning.metrics <- function(dataset,
 
     # KS Evaluation
     kseval <- ifelse(ks < 0.3, "Unpredictive",
-                     ifelse(ks < 0.4, "Fair",
-                            ifelse(
-                              ks < 0.5, "Good",
-                              ifelse(
-                                ks < 0.6,
-                                "Excellent",
-                                ifelse(ks < 0.7, "Awesome", "That Good. Really?")
-                              )
-                            )))
+      ifelse(ks < 0.4, "Fair",
+        ifelse(
+          ks < 0.5, "Good",
+          ifelse(
+            ks < 0.6,
+            "Excellent",
+            ifelse(ks < 0.7, "Awesome", "That Good. Really?")
+          )
+        )
+      )
+    )
 
     # If report is activated (report = 1)
     if (report == 1) {
@@ -290,32 +296,44 @@ smbinning.metrics <- function(dataset,
       admetrics <- paste0(admetrics, "\n")
       admetrics <-
         paste0(admetrics, "  Overall Performance Metrics \n")
-      admetrics <- paste0(admetrics,
-                          "  -------------------------------------------------- \n")
-      admetrics <- paste0(admetrics,
-                          "                    KS : ",
-                          sprintf("%.4f", round(ks, 4)),
-                          " (",
-                          kseval,
-                          ")\n")
+      admetrics <- paste0(
+        admetrics,
+        "  -------------------------------------------------- \n"
+      )
+      admetrics <- paste0(
+        admetrics,
+        "                    KS : ",
+        sprintf("%.4f", round(ks, 4)),
+        " (",
+        kseval,
+        ")\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "                   AUC : ",
-                          sprintf("%.4f", round(auc, 4)),
-                          " (",
-                          auceval,
-                          ")\n")
+      admetrics <- paste0(
+        admetrics,
+        "                   AUC : ",
+        sprintf("%.4f", round(auc, 4)),
+        " (",
+        auceval,
+        ")\n"
+      )
 
       admetrics <- paste0(admetrics, "\n")
-      admetrics <- paste0(admetrics,
-                          "  Classification Matrix \n")
-      admetrics <- paste0(admetrics,
-                          "  -------------------------------------------------- \n")
-      admetrics <- paste0(admetrics,
-                          "           Cutoff (>=) : ",
-                          round(as.numeric(optcut), 4),
-                          optcutcomment,
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "  Classification Matrix \n"
+      )
+      admetrics <- paste0(
+        admetrics,
+        "  -------------------------------------------------- \n"
+      )
+      admetrics <- paste0(
+        admetrics,
+        "           Cutoff (>=) : ",
+        round(as.numeric(optcut), 4),
+        optcutcomment,
+        "\n"
+      )
       admetrics <-
         paste0(admetrics, "   True Positives (TP) : ", tp, "\n")
       admetrics <-
@@ -332,12 +350,16 @@ smbinning.metrics <- function(dataset,
       admetrics <-
         paste0(admetrics, "  Business/Performance Metrics \n")
       admetrics <-
-        paste0(admetrics,
-               "  -------------------------------------------------- \n")
-      admetrics <- paste0(admetrics,
-                          "      %Records>=Cutoff : ",
-                          sprintf("%.4f", round(recsabovecutoff, 4)),
-                          "\n")
+        paste0(
+          admetrics,
+          "  -------------------------------------------------- \n"
+        )
+      admetrics <- paste0(
+        admetrics,
+        "      %Records>=Cutoff : ",
+        sprintf("%.4f", round(recsabovecutoff, 4)),
+        "\n"
+      )
       admetrics <- paste0(
         admetrics,
         "             Good Rate : ",
@@ -354,58 +376,78 @@ smbinning.metrics <- function(dataset,
         sprintf("%.4f", round(SumBads / SumRecords, 4)),
         " Overall)\n"
       )
-      admetrics <- paste0(admetrics,
-                          "        Accuracy (ACC) : ",
-                          sprintf("%.4f", round((tp + tn) / (tp + fp + tn + fn), 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "        Accuracy (ACC) : ",
+        sprintf("%.4f", round((tp + tn) / (tp + fp + tn + fn), 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "     Sensitivity (TPR) : ",
-                          sprintf("%.4f", round(tp / p, 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "     Sensitivity (TPR) : ",
+        sprintf("%.4f", round(tp / p, 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          " False Neg. Rate (FNR) : ",
-                          sprintf("%.4f", round(fn / p, 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        " False Neg. Rate (FNR) : ",
+        sprintf("%.4f", round(fn / p, 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          " False Pos. Rate (FPR) : ",
-                          sprintf("%.4f", round(fp / n, 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        " False Pos. Rate (FPR) : ",
+        sprintf("%.4f", round(fp / n, 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "     Specificity (TNR) : ",
-                          sprintf("%.4f", round(tn / n, 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "     Specificity (TNR) : ",
+        sprintf("%.4f", round(tn / n, 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "       Precision (PPV) : ",
-                          sprintf("%.4f", round(tp / (tp + fp), 4)),
-                          "\n")
-      admetrics <- paste0(admetrics,
-                          "  False Discovery Rate : ",
-                          sprintf("%.4f", round(fp / (tp + fp), 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "       Precision (PPV) : ",
+        sprintf("%.4f", round(tp / (tp + fp), 4)),
+        "\n"
+      )
+      admetrics <- paste0(
+        admetrics,
+        "  False Discovery Rate : ",
+        sprintf("%.4f", round(fp / (tp + fp), 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "    False Omision Rate : ",
-                          sprintf("%.4f", round(fn / (fn + tn), 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "    False Omision Rate : ",
+        sprintf("%.4f", round(fn / (fn + tn), 4)),
+        "\n"
+      )
 
-      admetrics <- paste0(admetrics,
-                          "  Inv. Precision (NPV) : ",
-                          sprintf("%.4f", round(tn / (fn + tn), 4)),
-                          "\n")
+      admetrics <- paste0(
+        admetrics,
+        "  Inv. Precision (NPV) : ",
+        sprintf("%.4f", round(tn / (fn + tn), 4)),
+        "\n"
+      )
 
       admetrics <- paste0(admetrics, "\n")
-      admetrics <- paste0(admetrics,
-                          "  Note: ",
-                          nmiss,
-                          " rows deleted due to missing data.\n")
+      admetrics <- paste0(
+        admetrics,
+        "  Note: ",
+        nmiss,
+        " rows deleted due to missing data.\n"
+      )
 
       admetrics <- paste0(admetrics, "\n")
-      admetrics = gsub(", ", "", admetrics)
+      admetrics <- gsub(", ", "", admetrics)
 
       # Metric report
       cat(admetrics)
@@ -449,15 +491,17 @@ smbinning.metrics <- function(dataset,
       )
       grid()
       text(as.numeric(min(df$Prediction)),
-           0.95,
-           "* Bads",
-           pos = 4,
-           col = "firebrick")
+        0.95,
+        "* Bads",
+        pos = 4,
+        col = "firebrick"
+      )
       text(as.numeric(min(df$Prediction)),
-           0.90,
-           "* Goods",
-           pos = 4,
-           col = "dodgerblue4")
+        0.90,
+        "* Goods",
+        pos = 4,
+        col = "dodgerblue4"
+      )
       segments(
         scoreks,
         cgks,
@@ -481,9 +525,13 @@ smbinning.metrics <- function(dataset,
         col = "dodgerblue4",
         bg = "dodgerblue4"
       )
-      text(0.95 * as.numeric(max(df$Prediction)), 0.1,
-           paste0("KS : ",
-                  round(100 * ks, 2), "%"))
+      text(
+        0.95 * as.numeric(max(df$Prediction)), 0.1,
+        paste0(
+          "KS : ",
+          round(100 * ks, 2), "%"
+        )
+      )
     }
 
     if (returndf == 1) {
@@ -516,22 +564,25 @@ smbinning.metrics <- function(dataset,
 #' library(smbinning)
 #'
 #' # Check stability for income
-#' smbinning.psi(df=smbsimdf1,
-#'               y="period",
-#'               x="inc")
-#'
+#' smbinning.psi(
+#'   df = smbsimdf1,
+#'   y = "period",
+#'   x = "inc"
+#' )
 #' @export
 smbinning.psi <- function(df, y, x) {
   i <- which(names(df) == x)
   j <- which(names(df) == y)
 
-  tryCatch({
-    assert_that(is.data.frame(df))
-  },
-  error = function(e) {
-    message("Data df not a dataframe.")
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(is.data.frame(df))
+    },
+    error = function(e) {
+      message("Data df not a dataframe.")
+      return(NA)
+    }
+  )
 
   if (identical(i, integer(0))) {
     return(stop(paste("Characteristic", x, "not found")))
@@ -567,8 +618,7 @@ smbinning.psi <- function(df, y, x) {
     # PSI Period VS First Period
     for (k in 2:n) {
       for (l in 1:m) {
-        if (psipct[l, 1] > 0 & psipct[l, k] > 0)
-        {
+        if (psipct[l, 1] > 0 & psipct[l, k] > 0) {
           psimg[l, k] <-
             round((psipct[l, k] - psipct[l, 1]) * log(psipct[l, k] / psipct[l, 1]), 8)
         }
@@ -584,7 +634,7 @@ smbinning.psi <- function(df, y, x) {
     psimg <- as.table(psimg)
 
     # Extract total PSI only
-    psitable <- psimg[nrow(psimg),]
+    psitable <- psimg[nrow(psimg), ]
     psitable <- as.data.frame(psitable)
 
     # Plot
@@ -618,9 +668,11 @@ smbinning.psi <- function(df, y, x) {
     abline(h = 0.25, lty = 2)
     axis(1, at = 1:nrow(psitable), psitable$Partition) # Add period
 
-    list(psicnt = psicnt,
-         psipct = psipct,
-         psimg = psimg)
+    list(
+      psicnt = psicnt,
+      psipct = psipct,
+      psimg = psimg
+    )
   }
 }
 # End: PSI

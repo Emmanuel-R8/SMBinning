@@ -22,25 +22,24 @@
 #' library(smbinning) # Load package and its data
 #'
 #' # Binning a factor variable
-#' result=smbinning.factor(smbsimdf1,x="inc",y="fgood", maxcat=11)
+#' result <- smbinning.factor(smbsimdf1, x = "inc", y = "fgood", maxcat = 11)
 #' result$ivtable
 #' @export
 smbinning.factor <- function(df, y, x, maxcat = 10) {
-
-  requireNamespace("assertthat")
   requireNamespace("gsubfn")
-  requireNamespace("partykit")
   requireNamespace("sqldf")
 
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE, maxcat = maxcat)
-  tryCatch({
-    assert_that(msg == "")
-  },
-  error = function(e) {
-    message(msg)
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(msg == "")
+    },
+    error = function(e) {
+      message(msg)
+      return(NA)
+    }
+  )
 
   col_x <- which(names(df) == x) # Find Column for independant
   col_y <- which(names(df) == y) # Find Column for dependant
@@ -67,7 +66,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   }
 
   # Sort / converts to a ordered vector (asc)
-  cutvct <- cutvct[order(cutvct[, 1]),]
+  cutvct <- cutvct[order(cutvct[, 1]), ]
 
   # Build Information Value Table
   # Counts per not missing cutpoint
@@ -79,7 +78,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
     cutpoint <- cutvct[row_i]
     ivt <- rbind(
       ivt,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select '= ''$cutpoint''' as Cutpoint,
                   sum(case when $x = '$cutpoint' and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x = '$cutpoint' and $y=1 then 1 else 0 end) as CntGood,
@@ -105,7 +104,7 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   if (x.na > 0) {
     ivt <- rbind(
       ivt,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
@@ -124,14 +123,16 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
       )
     )
   } else {
-    ivt <- rbind(ivt,
-                 c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+    ivt <- rbind(
+      ivt,
+      c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+    )
   }
 
   # Total
   ivt <- rbind(
     ivt,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
@@ -181,7 +182,9 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
   ivt[col_y + 1, 7] <- ivt[col_y, 7] + ivt[col_y + 1, 4]
 
   # Calculating metrics
-  options(scipen = 999) # Remove Scientific Notation
+
+  # Remove Scientific Notation
+  options(scipen = 999)
   ivt[, 8] <- round(ivt[, 2] / ivt[col_y + 2, 2], 4) # PctRec
   ivt[, 9] <- round(ivt[, 3] / ivt[, 2], 4) # GoodRate
   ivt[, 10] <- round(ivt[, 4] / ivt[, 2], 4) # BadRate
@@ -247,25 +250,31 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 #'
 #' # Example: Customized binning for a factor variable
 #' # Notation: Groups between double quotes
-#' result=smbinning.factor.custom(
-#'   smbsimdf1,x="inc",
-#'   y="fgood",
-#'   c("'W01','W02'",        # Group 1
-#'     "'W03','W04','W05'",  # Group 2
-#'     "'W06','W07'",        # Group 3
-#'     "'W08','W09','W10'")) # Group 4
+#' result <- smbinning.factor.custom(
+#'   smbsimdf1,
+#'   x = "inc",
+#'   y = "fgood",
+#'   c(
+#'     "'W01','W02'", # Group 1
+#'     "'W03','W04','W05'", # Group 2
+#'     "'W06','W07'", # Group 3
+#'     "'W08','W09','W10'"
+#'   )
+#' ) # Group 4
 #' result$ivtable
 #' @export
 smbinning.factor.custom <- function(df, y, x, groups) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = TRUE)
-  tryCatch({
-    assert_that(msg == "")
-  },
-  error = function(e) {
-    message(msg)
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(msg == "")
+    },
+    error = function(e) {
+      message(msg)
+      return(NA)
+    }
+  )
 
   col_x <- which(names(df) == x) # Find Column for independant
   col_y <- which(names(df) == y) # Find Column for dependant
@@ -304,7 +313,7 @@ smbinning.factor.custom <- function(df, y, x, groups) {
   if (x.na > 0) {
     ivt <- rbind(
       ivt,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
@@ -323,13 +332,15 @@ smbinning.factor.custom <- function(df, y, x, groups) {
       )
     )
   } else {
-    ivt <- rbind(ivt,
-                 c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+    ivt <- rbind(
+      ivt,
+      c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA)
+    )
   }
   # Total
   ivt <- rbind(
     ivt,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
@@ -431,22 +442,22 @@ smbinning.factor.custom <- function(df, y, x, groups) {
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
-#' pop=smbsimdf1 # Set population
-#' train=subset(pop,rnd<=0.7) # Training sample
+#' pop <- smbsimdf1 # Set population
+#' train <- subset(pop, rnd <= 0.7) # Training sample
 #'
 #' # Binning a factor variable on training data
-#' result=smbinning.factor(train,x="home",y="fgood")
+#' result <- smbinning.factor(train, x = "home", y = "fgood")
 #'
 #' # Example: Append new binned characteristic to population
-#' pop=smbinning.factor.gen(pop,result,"g1home")
+#' pop <- smbinning.factor.gen(pop, result, "g1home")
 #'
 #' # Split training
-#' train=subset(pop,rnd<=0.7) # Training sample
+#' train <- subset(pop, rnd <= 0.7) # Training sample
 #'
 #' # Check new field counts
 #' table(train$g1home)
 #' table(pop$g1home)
-# Updated 20170910
+#' # Updated 20170910
 #' @export
 smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   df <- cbind(df, tmpname = NA)
@@ -493,16 +504,14 @@ smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
 
   # If for any reason #bins in test sample are different, error
   if (any(is.na(df[, col_id])) == F &
-      length(blab) > length(unique(df[, ncol])))
-  {
+    length(blab) > length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )
   }
 
   if (any(is.na(df[, col_id])) == TRUE &
-      length(blab) >= length(unique(df[, ncol])))
-  {
+    length(blab) >= length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )
@@ -526,4 +535,3 @@ smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   return(df)
 }
 # End Gen Characteristic for factor variables
-

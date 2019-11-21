@@ -3,9 +3,9 @@
 #' @import gsubfn
 #' @import partykit
 #' @import sqldf
-#'
 #' @include error_checking.R
-#'
+
+
 #' Optimal Binning for Scoring Modeling
 #'
 #' \strong{Optimal Binning} categorizes a numeric characteristic into bins for ulterior usage in scoring modeling.
@@ -31,59 +31,67 @@
 #' library(smbinning) # Load package and its data
 #'
 #' # Example: Optimal binning
-#' result=smbinning(df=smbsimdf1,y="fgood",x="cbs1") # Run and save result
+#' result <- smbinning(df = smbsimdf1, y = "fgood", x = "cbs1") # Run and save result
 #' result$ivtable # Tabulation and Information Value
 #' result$iv # Information value
 #' result$bands # Bins or bands
 #' result$ctree # Decision tree
 #' @export
-smbinning <- function(df, y, x, p = p, verbose = FALSE) {
-
-  requireNamespace("dplyr")
-  requireNamespace("assertthat")
-  requireNamespace("gsubfn")
-  requireNamespace("partykit")
-  requireNamespace("sqldf")
+smbinning <- function(df, y, x, p = 0.05, verbose = FALSE) {
 
   # Check data frame and formats
-  msg <- haveParametersError(df, x, y, xIsFactor = FALSE, p = 0.05)
+  msg <- haveParametersError(df, x, y, xIsFactor = FALSE, p = p)
 
-  tryCatch({
-    assert_that(msg == "")
-  },
-  error = function(e) {
-    message(msg)
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(msg == "")
+    },
+    error = function(e) {
+      message(msg)
+      return(NA)
+    })
 
-  tryCatch({
-    assert_that(between(p, 0.0, 0.5))
-  },
-  error = function(e) {
-    message("p must be greater than 0 and lower than 0.5 (50%).")
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(between(p, 0.0, 0.5))
+    },
+    error = function(e) {
+      message("p must be greater than 0 and lower than 0.5 (50%).")
+      return(NA)
+    })
 
-  if (verbose == TRUE) {"Start recursive partitioning."; startTime <- Sys.time()}
-  ctree <- ctree(
+  if (verbose == TRUE) {
+    cat("Start recursive partitioning.")
+    startTime <- Sys.time()
+  }
+  ctree <- partykit::ctree(
     formula(paste(y, "~", x)),
     data = df,
     na.action = na.exclude,
     control = ctree_control(minbucket = ceiling(round(p * nrow(df))))
   )
-  if (verbose == TRUE) {cat("  Elapsed: ", Sys.time() - startTime, "\n")}
+  if (verbose == TRUE) {
+    cat("  Elapsed: ", Sys.time() - startTime, "\n")
+  }
 
-  bins <- width(ctree)
-  tryCatch({
-    assert_that(bins >= 2)
-  },
-  warning = function(e) {
-    message("No significant splits.")
-    return(NA)
-  })
+  bins <- partykit::width(ctree)
+  if (verbose == TRUE) {
+    cat("Number of bins = ", bins, "\n")
+  }
+  tryCatch(
+    {
+      assertthat::assert_that(bins >= 2)
+    },
+    warning = function(e) {
+      message("No significant splits.")
+      return(NA)
+    })
 
   col_x <- which(names(df) == x)
   col_y <- which(names(df) == y)
+  if (verbose == TRUE) {
+    cat("Column number x = ", col_x, "; and y = ", col_y, "\n")
+  }
 
   # Append cutpoinstop()ts in a table (Automated)
   # Shell
@@ -91,6 +99,9 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
 
   # Number of nodes
   nNodes <- length(ctree)
+  if (verbose == TRUE) {
+    cat("Number of nodes = ", nNodes, "\n")
+  }
 
   for (index_i in 1:nNodes) {
     cutvct <-  rbind(cutvct, ctree[index_i]$node$split$breaks)
@@ -101,8 +112,8 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
 
   # Round to 4 dec. to avoid borderline cases
   cutvct <-  ifelse(cutvct < 0,
-                    trunc(10000 * cutvct) / 10000,
-                    ceiling(10000 * cutvct) / 10000)
+    trunc(10000 * cutvct) / 10000,
+    ceiling(10000 * cutvct) / 10000)
 
   # Build Information Value Table
   # Counts per not missing cutpoint
@@ -111,12 +122,15 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
 
   # Number of cutpoints
   nCuts <- length(cutvct)
+  if (verbose == TRUE) {
+    cat("Number of cuts = ", nCuts, "\n")
+  }
 
   for (col_i in 1:nCuts) {
     cutpoint  <-  cutvct[col_i]
     IVTable <-  rbind(
       IVTable,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select '<= $cutpoint' as Cutpoint,
                   NULL as CntRec,
                   NULL as CntGood,
@@ -141,25 +155,21 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
   # Round to 4 dec. to avoid borderline cases
   cutpoint <- max(df[, col_x], na.rm = TRUE)
   cutpoint <- ifelse(cutpoint < 0,
-                     trunc(10000 * cutpoint) / 10000,
-                     ceiling(10000 * cutpoint) / 10000)
+    trunc(10000 * cutpoint) / 10000,
+    ceiling(10000 * cutpoint) / 10000)
 
-  # Calculte Max cut point
+  # Calculate Max cut point
   maxcutpoint <- max(cutvct)
 
-  # Calculte Min without Missing for later usage
+  # Calculate Min without Missing for later usage
   mincutpoint <- min(df[, col_x], na.rm = TRUE)
 
   # Round to 4 dec. to avoid borderline cases
-  mincutpoint <- ifelse(
-    mincutpoint < 0,
-    trunc(10000 * mincutpoint) / 10000,
-    ceiling(10000 * mincutpoint) / 10000
-  )
+  mincutpoint <- ceiling(10000 * mincutpoint) / 10000
 
   IVTable  <-  rbind(
     IVTable,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select '> $maxcutpoint' as Cutpoint,
                 NULL as CntRec,
                 NULL as CntGood,
@@ -184,7 +194,7 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
   if (x.na > 0) {
     IVTable <-  rbind(
       IVTable,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
@@ -206,13 +216,13 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
 
   else {
     IVTable <-  rbind(IVTable,
-                      c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+      c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
   }
 
   # Total
   IVTable <- rbind(
     IVTable,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
@@ -340,23 +350,24 @@ smbinning <- function(df, y, x, p = p, verbose = FALSE) {
 #' library(smbinning) # Load package and its data
 #'
 #' # Custom cutpoints using percentiles (20% each)
-#' cbs1cuts=as.vector(quantile(smbsimdf1$cbs1, probs=seq(0,1,0.2), na.rm=TRUE)) # Quantiles
-#' cbs1cuts=cbs1cuts[2:(length(cbs1cuts)-1)] # Remove first (min) and last (max) values
+#' cbs1cuts <- as.vector(quantile(smbsimdf1$cbs1, probs = seq(0, 1, 0.2), na.rm = TRUE)) # Quantiles
+#' cbs1cuts <- cbs1cuts[2:(length(cbs1cuts) - 1)] # Remove first (min) and last (max) values
 #'
 #' # Example: Customized binning
-#' result=smbinning.custom(df=smbsimdf1,y="fgood",x="cbs1",cuts=cbs1cuts) # Run and save
+#' result <- smbinning.custom(df = smbsimdf1, y = "fgood", x = "cbs1", cuts = cbs1cuts) # Run and save
 #' result$ivtable # Tabulation and Information Value
 #' @export
 smbinning.custom <- function(df, y, x, cuts) {
   # Check data frame and formats
   msg <- haveParametersError(df, x, y, xIsFactor = FALSE)
-  tryCatch({
-    assert_that(msg == "")
-  },
-  error = function(e) {
-    message(msg)
-    return(NA)
-  })
+  tryCatch(
+    {
+      assertthat::assert_that(msg == "")
+    },
+    error = function(e) {
+      message(msg)
+      return(NA)
+    })
 
   # Find Column for independant
   col_x <- which(names(df) == x)
@@ -367,17 +378,21 @@ smbinning.custom <- function(df, y, x, cuts) {
   # Append cutpoints in a table (Automated)
   cutvct <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
   n <- length(cuts) # Number of cutpoints
+
+  # At least 1 cutpoint
   if (n < 1) {
     return("No Bins")
-  } # At least 1 cutpoint
+  }
   for (row_i  in 1:n) {
     cutvct <- rbind(cutvct, cuts[row_i])
   }
-  cutvct <-
-    cutvct[order(cutvct[, 1]),] # Sort / converts to a ordered vector (asc)
-  cutvct <- ifelse(cutvct < 0,
-                   trunc(10000 * cutvct) / 10000,
-                   ceiling(10000 * cutvct) / 10000) # Round to 4 dec. to avoid borderline cases
+
+  # Sort / converts to a ordered vector (asc)
+  cutvct <- cutvct[order(cutvct[, 1]), ]
+
+  # Round to 4 dec. to avoid borderline cases
+  cutvct <- ceiling(10000 * cutvct) / 10000
+
   # Build Information Value Table
   # Counts per not missing cutpoint
   ivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Shell
@@ -386,7 +401,7 @@ smbinning.custom <- function(df, y, x, cuts) {
     cutpoint <- cutvct[row_i]
     ivt <- rbind(
       ivt,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select '<= $cutpoint' as Cutpoint,
                   NULL as CntRec,
                   NULL as CntGood,
@@ -410,9 +425,7 @@ smbinning.custom <- function(df, y, x, cuts) {
   cutpoint <- max(df[, col_x], na.rm = TRUE)
 
   # Round to 4 dec. to avoid borderline cases
-  cutpoint <- ifelse(cutpoint < 0,
-                     trunc(10000 * cutpoint) / 10000,
-                     ceiling(10000 * cutpoint) / 10000)
+  cutpoint <- ceiling(10000 * cutpoint) / 10000
 
   # Calculate Max cut point
   maxcutpoint <- max(cutvct)
@@ -421,14 +434,11 @@ smbinning.custom <- function(df, y, x, cuts) {
   mincutpoint <- min(df[, col_x], na.rm = TRUE)
 
   # Round to 4 dec. to avoid borderline cases
-  mincutpoint <- ifelse(
-    mincutpoint < 0,
-    trunc(10000 * mincutpoint) / 10000,
-    ceiling(10000 * mincutpoint) / 10000
-  )
+  mincutpoint <- ceiling(10000 * mincutpoint) / 10000
+
   ivt <- rbind(
     ivt,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select '> $maxcutpoint' as Cutpoint,
                 NULL as CntRec,
                 NULL as CntGood,
@@ -453,7 +463,7 @@ smbinning.custom <- function(df, y, x, cuts) {
   if (x.na > 0) {
     ivt <- rbind(
       ivt,
-      fn$sqldf(
+      gsubfn::fn$sqldf(
         "select 'Missing' as Cutpoint,
                   sum(case when $x is NULL and $y in (1,0) then 1 else 0 end) as CntRec,
                   sum(case when $x is NULL and $y=1 then 1 else 0 end) as CntGood,
@@ -473,13 +483,13 @@ smbinning.custom <- function(df, y, x, cuts) {
     )
   } else {
     ivt <- rbind(ivt,
-                 c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+      c("Missing", 0, 0, 0, NA, NA, NA, NA, NA, NA, NA, NA, NA))
   }
 
   # Total
   ivt <- rbind(
     ivt,
-    fn$sqldf(
+    gsubfn::fn$sqldf(
       "select 'Total' as Cutpoint,
                 count(*) as CntRec,
                 sum(case when $y=1 then 1 else 0 end) as CntGood,
@@ -519,9 +529,9 @@ smbinning.custom <- function(df, y, x, cuts) {
   # From 2nd row
   n <- nrow(ivt) - 2
   for (col_y  in 2:n) {
-    ivt[col_y , 2] <- ivt[col_y , 5] - ivt[col_y  - 1, 5]
-    ivt[col_y , 3] <- ivt[col_y , 6] - ivt[col_y  - 1, 6]
-    ivt[col_y , 4] <- ivt[col_y , 7] - ivt[col_y  - 1, 7]
+    ivt[col_y, 2] <- ivt[col_y, 5] - ivt[col_y  - 1, 5]
+    ivt[col_y, 3] <- ivt[col_y, 6] - ivt[col_y  - 1, 6]
+    ivt[col_y, 4] <- ivt[col_y, 7] - ivt[col_y  - 1, 7]
   }
 
   ivt[2, 2] <- ivt[2, 5] - ivt[1, 5]
@@ -529,9 +539,9 @@ smbinning.custom <- function(df, y, x, cuts) {
   ivt[2, 4] <- ivt[2, 7] - ivt[1, 7]
 
   # Missing row
-  ivt[col_y  + 1, 5] <- ivt[col_y , 5] + ivt[col_y  + 1, 2]
-  ivt[col_y  + 1, 6] <- ivt[col_y , 6] + ivt[col_y  + 1, 3]
-  ivt[col_y  + 1, 7] <- ivt[col_y , 7] + ivt[col_y  + 1, 4]
+  ivt[col_y  + 1, 5] <- ivt[col_y, 5] + ivt[col_y  + 1, 2]
+  ivt[col_y  + 1, 6] <- ivt[col_y, 6] + ivt[col_y  + 1, 3]
+  ivt[col_y  + 1, 7] <- ivt[col_y, 7] + ivt[col_y  + 1, 4]
 
   # Calculating metrics
   # Remove Scientific Notation
@@ -605,14 +615,14 @@ smbinning.custom <- function(df, y, x, cuts) {
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
-#' pop=smbsimdf1 # Set population
-#' train=subset(pop,rnd<=0.7) # Training sample
+#' pop <- smbsimdf1 # Set population
+#' train <- subset(pop, rnd <= 0.7) # Training sample
 #'
 #' # Binning application for a numeric variable
-#' result=smbinning(df=train,y="fgood",x="dep") # Run and save result
+#' result <- smbinning(df = train, y = "fgood", x = "dep") # Run and save result
 #'
 #' # Generate a dataset with binned characteristic
-#' pop=smbinning.gen(pop,result,"g1dep")
+#' pop <- smbinning.gen(pop, result, "g1dep")
 #'
 #' # Check new field counts
 #' table(pop$g1dep)
@@ -653,14 +663,14 @@ smbinning.gen <- function(df, ivout, chrname = "NewChar") {
 
   # If for any reason #bins in test sample are different, error
   if (any(is.na(df[, col_id])) == F &
-      length(blab) > length(unique(df[, ncol]))) {
+    length(blab) > length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )
   }
 
   if (any(is.na(df[, col_id])) == TRUE &
-      length(blab) >= length(unique(df[, ncol]))) {
+    length(blab) >= length(unique(df[, ncol]))) {
     stop(
       "Number of bins in dataset different from original result.\n  Likely due to splitting population in training/testing sample."
     )

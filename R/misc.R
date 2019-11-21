@@ -1,29 +1,28 @@
 #' @include error_checking.R
 
-# Ini Monotonic Binning
 #' Monotonic Binning
 #'
-#' It gives the user the ability to impose a monotonic trend for good/bad rates per bin.
+#' `smbinning.monotonic` gives the user the ability to impose a monotonic trend for good/bad rates per bin.
 #' @param df A data frame.
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
 #' Name of \code{y} must not have a dot. Name "default" is not allowed.
 #' @param x Continuous characteristic. At least 5 different values. Value \code{Inf} is not allowed.
 #' Name of \code{x} must not have a dot.
 #' @param p Percentage of records per bin. Default 5\% (0.05).
-#' @return The command \code{smbinning.monotonic} generates and object containing the necessary info and utilities for binning.
-#' The user should save the output result so it can be used
-#' with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
+#' @return The command \code{smbinning.monotonic} generates and object containing the necessary info
+#' and utilities for binning. The user should save the output result so it can be used with
+#' \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen}.
 #' @examples
 #' # Load library and its dataset
 #' library(smbinning) # Load package and its data
 #'
 #' # Example 1: Monotonic Binning (Increasing Good Rate per Bin)
-#' smbinning(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run regular binning
-#' smbinning.monotonic(df=smbsimdf2,y="fgood2",x="chr2",p=0.05)$ivtable # Run monotonic binning
+#' smbinning(df = smbsimdf2, y = "fgood2", x = "chr2", p = 0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df = smbsimdf2, y = "fgood2", x = "chr2", p = 0.05)$ivtable # Run monotonic binning
 #'
 #' # Example 2: Monotonic Binning (Decreasing Good Rate per Bin)
-#' smbinning(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run regular binning
-#' smbinning.monotonic(df=smbsimdf2,y="fgood3",x="chr3",p=0.05)$ivtable # Run monotonic binning
+#' smbinning(df = smbsimdf2, y = "fgood3", x = "chr3", p = 0.05)$ivtable # Run regular binning
+#' smbinning.monotonic(df = smbsimdf2, y = "fgood3", x = "chr3", p = 0.05)$ivtable # Run monotonic binning
 #' @export
 smbinning.monotonic <- function(df, y, x, p = 0.05) {
   # Ini function monotonic
@@ -32,13 +31,16 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
   j <- which(names(df) == x) # Column for x
 
   result <- smbinning(df, y, x, p) # Save result from usual binning
-  c <-
-    cor(df[, i], df[, j], use = "complete.obs", method = c("pearson"))
+  c <- cor(df[, i], df[, j],
+    use = "complete.obs",
+    method = c("pearson"))
+
+  # Increasing (Column 9 Good Rate) or Decreasing (Column 10 Bad Rate)?
   col <- if (c > 0) {
     9
   } else {
     10
-  } # Increasing (Column 9 Good Rate) or Decreasing (Column 10 Bad Rate)?
+  }
 
   if (result$iv < 0.1) {
     return("Not Meaningful (IV<0.1)")
@@ -49,10 +51,12 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 
     # Get relevant data
     ivtable <- result$ivtable
-    ratevalues <-
-      ivtable[, col] # Column 9 for increasing (Good Rate), 10 for decreasing (Bad Rate)
-    ratevalues <-
-      ratevalues[1:(length(ratevalues) - 2)] # Excludes total and missing
+
+    # Column 9 for increasing (Good Rate), 10 for decreasing (Bad Rate)
+    ratevalues <- ivtable[, col]
+
+    # Excludes total and missing
+    ratevalues <- ratevalues[1:(length(ratevalues) - 2)]
     ratecuts <- result$cuts
 
     # Start WHILE Loop
@@ -62,13 +66,11 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
     while (count < 1) {
       # If last bin not follow trend, change it the previous bin
       i <- length(ratevalues) - 1
-      ratecuts[i] <-
-        ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i -
-                                                             1], ratecuts[i])
+      ratecuts[i] <- ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i - 1], ratecuts[i])
+
       # If next bin (i+1) lower than previous (i) then merge
       for (i in 1:length(ratevalues) - 1) {
-        ratecuts[i] <-
-          ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i + 1], ratecuts[i])
+        ratecuts[i] <- ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i + 1], ratecuts[i])
       }
 
       # Make unique bin values
@@ -78,14 +80,16 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
       result <- smbinning.custom(df, y, x, ratecuts)
       ivtable <- result$ivtable
       ratevalues <- ivtable[, col]
-      ratevalues <-
-        ratevalues[1:(length(ratevalues) - 2)] # Excludes total and missing
 
-      iter <- iter + 1 # Number of iterations
+      # Excludes total and missing
+      ratevalues <- ratevalues[1:(length(ratevalues) - 2)]
+
+      # Number of iterations
+      iter <- iter + 1
 
       count <- if (all(ratevalues == cummax(ratevalues)) == FALSE) {
         0
-      } else{
+      } else {
         1
       }
 
@@ -98,7 +102,6 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 # End Monotonic Binning
 
 
-# Ini: Simulated Credit Data
 #' Simulated Credit Data
 #'
 #' A simulated dataset where the target variable is fgood,

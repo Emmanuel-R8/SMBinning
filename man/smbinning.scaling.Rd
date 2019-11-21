@@ -33,55 +33,68 @@ library(smbinning)
 pop <- smbsimdf1
 
 # Training sample
-train <- subset(pop,rnd <= 0.7)
+train <- subset(pop, rnd <= 0.7)
 
 # Generate binning object to generate variables
 smbcbs1 <- smbinning(train,
-                     x = "cbs1",
-                     y = "fgood")
+  x = "cbs1",
+  y = "fgood"
+)
 
 smbcbinq <- smbinning.factor(train,
-                             x = "cbinq",
-                             y = "fgood")
+  x = "cbinq",
+  y = "fgood"
+)
 
 smbcblineut <- smbinning.custom(train,
-                                x = "cblineut",
-                                y = "fgood",
-                                cuts = c(30,40,50))
+  x = "cblineut",
+  y = "fgood",
+  cuts = c(30, 40, 50)
+)
 
 smbpmt <- smbinning.factor(train,
-                           x = "pmt",
-                           y = "fgood")
+  x = "pmt",
+  y = "fgood"
+)
 
 smbtob <- smbinning.custom(train,
-                           x = "tob",
-                           y = "fgood",
-                           cuts = c(1,2,3))
+  x = "tob",
+  y = "fgood",
+  cuts = c(1, 2, 3)
+)
 
 smbdpd <- smbinning.factor(train,
-                           x = "dpd",
-                           y = "fgood")
+  x = "dpd",
+  y = "fgood"
+)
 
 smbdep <- smbinning.custom(train,
-                           x = "dep",
-                           y = "fgood",
-                           cuts = c(10000,12000,15000))
+  x = "dep",
+  y = "fgood",
+  cuts = c(10000, 12000, 15000)
+)
 
 smbod <- smbinning.factor(train,
-                          x = "od",
-                          y = "fgood")
+  x = "od",
+  y = "fgood"
+)
 
 smbhome <- smbinning.factor(train,
-                            x = "home",
-                            y = "fgood")
+  x = "home",
+  y = "fgood"
+)
 
 smbinc <- smbinning.factor.custom(train,
-                                  x = "inc",
-                                  y = "fgood",
-                                  c("'W01','W02'","'W03','W04','W05'",
-                                  "'W06','W07'","'W08','W09','W10'"))
+  x = "inc",
+  y = "fgood",
+  c(
+    "'W01','W02'", "'W03','W04','W05'",
+    "'W06','W07'", "'W08','W09','W10'"
+  )
+)
 
-pop <- smbinning.gen(pop,smbcbs1, "g1cbs1")
+# Generate new characteristics and update population dataset
+pop <- smbinning.gen(pop, smbcbs1, "g1cbs1")
 pop <- smbinning.factor.gen(pop, smbcbinq, "g1cbinq")
 pop <- smbinning.gen(pop, smbcblineut, "g1cblineut")
 pop <- smbinning.factor.gen(pop, smbpmt, "g1pmt")
@@ -97,21 +110,23 @@ pop <- smbinning.factor.gen(pop, smbinc, "g1inc")
 train <- subset(pop, rnd <= 0.7)
 
 # Testing sample
-test <- subset(pop,rnd > 0.7)
+test <- subset(pop, rnd > 0.7)
 
 # Run logistic regression
 f <- fgood ~ g1cbs1 + g1cbinq + g1cblineut + g1pmt + g1tob + g1dpd + g1dep + g1od + g1home + g1inc
 
 modlogisticsmb <- glm(f,
-                      data  =  train,
-                      family  =  binomial())
+  data = train,
+  family = binomial()
+)
 summary(modlogisticsmb)
 
 # Example: Scaling from logistic parameters to points
 smbscaled <- smbinning.scaling(modlogisticsmb,
-                               pdo = 20,
-                               score = 720,
-                               odds = 99)
+  pdo = 20,
+  score = 720,
+  odds = 99
+)
 
 # Scaled model
 smbscaled$logitscaled
@@ -130,5 +145,4 @@ pop1 <- smbinning.scoring.gen(smbscaled = smbscaled, dataset = pop)
 
 # Example Generate SQL code from scaled model
 smbinning.scoring.sql(smbscaled)
-
 }

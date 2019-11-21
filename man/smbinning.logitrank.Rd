@@ -32,8 +32,9 @@ in previous steps.
 library(smbinning)
 
 # Example: Best combination of characteristics
-smbinning.logitrank(y = "fgood",
-                    chr = c("chr1","chr2","chr3"),
-                    df = smbsimdf3)
-
+smbinning.logitrank(
+  y = "fgood",
+  chr = c("chr1", "chr2", "chr3"),
+  df = smbsimdf3
+)
 }

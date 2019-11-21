@@ -19,15 +19,15 @@ It generates four plots after running and saving the output report from \code{sm
 \examples{
 # Load library and its dataset
 library(smbinning)
-smbmetricsdf=smbinning.metrics(dataset=smbsimdf1, prediction="cbs1",
-                               actualclass="fgood", returndf=1)
+smbmetricsdf <- smbinning.metrics(dataset = smbsimdf1, prediction = "cbs1",
+  actualclass = "fgood", returndf = 1)
 
 # Example 1: Plots based on optimal cutoff
-smbinning.metrics.plot(df=smbmetricsdf,plot='cmactual')
+smbinning.metrics.plot(df = smbmetricsdf, plot = "cmactual")
 
 # Example 2: Plots using user defined cutoff
-smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactual')
-smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmactualrates')
-smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodel')
-smbinning.metrics.plot(df=smbmetricsdf,cutoff=600,plot='cmmodelrates')
+smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmactual")
+smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmactualrates")
+smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmmodel")
+smbinning.metrics.plot(df = smbmetricsdf, cutoff = 600, plot = "cmmodelrates")
 }
