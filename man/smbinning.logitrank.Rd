@@ -37,4 +37,5 @@ smbinning.logitrank(
   chr = c("chr1", "chr2", "chr3"),
   df = smbsimdf3
 )
+
 }

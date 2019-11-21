@@ -9,17 +9,18 @@ BugReports: https://github.com/Emmanuel-R8/SMBinning/issues
 Description: A set of functions to build a scoring model from beginning to end, leading the user
     to follow an efficient and organized development process, reducing significantly the time
     spent on data exploration, variable selection, feature engineering, binning and model selection 
-    among other recurrent tasks. 
-    The package also incorporates monotonic and customized binning, scaling capabilities that 
-    transforms logistic coefficients into points for a better business understanding and 
-    calculates and visualizes classic performance metrics of a classification model.
+    among other recurrent tasks. The package also incorporates monotonic and customized binning, 
+    scaling capabilities that transforms logistic coefficients into points for a better business 
+    understanding and calculates and visualizes classic performance metrics of a classification 
+    model.
 Depends:
-    R (>= 3.2)
+    R (>= 3.2),
+    tidyverse
 Imports:
+    nlme,
     sqldf,
     partykit,
     gsubfn,
-    tidyverse,
     assertthat
 License: GPL (>= 2)
 LazyData: true

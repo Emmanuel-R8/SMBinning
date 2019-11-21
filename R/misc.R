@@ -69,7 +69,7 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
       ratecuts[i] <- ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i - 1], ratecuts[i])
 
       # If next bin (i+1) lower than previous (i) then merge
-      for (i in 1:length(ratevalues) - 1) {
+      for (i in 1:(length(ratevalues) - 1)) {
         ratecuts[i] <- ifelse(ratevalues[i + 1] < ratevalues[i], ratecuts[i + 1], ratecuts[i])
       }
 
@@ -98,8 +98,8 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 
   return(result)
 
-} # End function monotonic
-# End Monotonic Binning
+}
+
 
 
 #' Simulated Credit Data
@@ -135,7 +135,7 @@ smbinning.monotonic <- function(df, y, x, p = 0.05) {
 #' @format Data frame with 2,500 rows and 22 columns with 500 defaults.
 #' @name smbsimdf1
 NULL
-# End: Simulated Credit Data
+
 
 
 # Begin: Monotonic Sample Data
@@ -160,6 +160,7 @@ NULL
 
 
 # Begin: Model Ranking Sample Data
+#
 #' Monotonic Binning Sample Data
 #'
 #' A simulated dataset used to illustrate the application of model ranking.
@@ -174,4 +175,3 @@ NULL
 #' @format Data frame with 1,000 rows and 4 columns.
 #' @name smbsimdf3
 NULL
-# End: Model Ranking Sample Data

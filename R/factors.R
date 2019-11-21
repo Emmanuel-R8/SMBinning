@@ -1,13 +1,8 @@
-#' @import gsubfn
-#' @import partykit
-#' @import sqldf
-#' @import assertthat
 #' @include error_checking.R
 
-# Begin Binning Factors
 #' Binning on Factor Variables
 #'
-#' It generates a table with relevant metrics for all the categories of a given factor variable.
+#' Generates a table with relevant metrics for all the categories of a given factor variable.
 #' @param df A data frame.
 #' @param y Binary response variable (0,1). Integer (\code{int}) is required.
 #' Name of \code{y} must not have a dot.
@@ -229,9 +224,10 @@ smbinning.factor <- function(df, y, x, maxcat = 10) {
 
 
 # Begin Custom Binning Factors
+#
 #' Customized Binning on Factor Variables
 #'
-#' It gives the user the ability to combine categories and create new attributes for a given characteristic.
+#' Gives the user the ability to combine categories and create new attributes for a given characteristic.
 #' Once these new attribues are created in a list (called \code{groups}), the funtion generates a table for
 #' the uniques values of a given factor variable.
 #' @param df A data frame.
@@ -431,7 +427,8 @@ smbinning.factor.custom <- function(df, y, x, groups) {
 
 
 # Begin Gen Characteristic for factor variables
-#' Utility to generate a new characteristic from a factor variable
+#
+#' Utility function to generate a new characteristic from a factor variable
 #'
 #' It generates a data frame with a new predictive characteristic from a factor variable after applying
 #' \code{smbinning.factor} or \code{smbinning.factor.custom}.
@@ -469,13 +466,13 @@ smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   # If smbinning.factor
   if (is.null(ivout$groups)) {
     b <- ivout$cuts
-    for (i in 1:length(b)) {
+    for (i in seq_len(b)) {
       df[, ncol][df[, col_id] == b[i]] <- i
     }
   }
   # If smbinning.factor.custom
   else {
-    for (i in 1:length(ivout$groups)) {
+    for (i in seq_len(ivout$groups)) {
       gelements <- as.list(strsplit(as.character(gsub(
         "'", "", ivout$groups[i]
       )), ",")[[1]])
@@ -534,4 +531,3 @@ smbinning.factor.gen <- function(df, ivout, chrname = "NewChar") {
   names(df)[names(df) == "tmpname"] <- chrname
   return(df)
 }
-# End Gen Characteristic for factor variables

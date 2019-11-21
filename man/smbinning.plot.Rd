@@ -25,7 +25,8 @@ library(smbinning)
 result <- smbinning(df = smbsimdf1, y = "fgood", x = "cbs1") # Run and save result
 par(mfrow = c(2, 2))
 boxplot(smbsimdf1$cbs1 ~ smbsimdf1$fgood,
-  horizontal = TRUE, frame = FALSE, col = "lightgray", main = "Distribution")
+  horizontal = TRUE, frame = FALSE, col = "lightgray", main = "Distribution"
+)
 mtext("Credit Score", 3)
 smbinning.plot(result, option = "dist", sub = "Credit Score")
 smbinning.plot(result, option = "badrate", sub = "Credit Score")

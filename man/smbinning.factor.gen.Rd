@@ -2,7 +2,7 @@
 % Please edit documentation in R/factors.R
 \name{smbinning.factor.gen}
 \alias{smbinning.factor.gen}
-\title{Utility to generate a new characteristic from a factor variable}
+\title{Utility function to generate a new characteristic from a factor variable}
 \usage{
 smbinning.factor.gen(df, ivout, chrname = "NewChar")
 }

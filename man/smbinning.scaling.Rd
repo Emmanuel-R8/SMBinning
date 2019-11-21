@@ -2,7 +2,7 @@
 % Please edit documentation in R/regression.R
 \name{smbinning.scaling}
 \alias{smbinning.scaling}
-\title{Scaling}
+\title{Model Coefficient Scaling}
 \usage{
 smbinning.scaling(logitraw, pdo = 20, score = 720, odds = 99)
 }
@@ -21,7 +21,7 @@ A scaled model from a logistic regression built with binned variables, the param
 used in the scaling process, the expected minimum and maximum score, and the original logistic model.
 }
 \description{
-It transforms the coefficients of a logistic regression into scaled points
+Transforms the coefficients of a logistic regression into scaled points
 based on the following three parameters pre-selected by the analyst: PDO, Score, and Odds.
 }
 \examples{
@@ -145,4 +145,5 @@ pop1 <- smbinning.scoring.gen(smbscaled = smbscaled, dataset = pop)
 
 # Example Generate SQL code from scaled model
 smbinning.scoring.sql(smbscaled)
+
 }

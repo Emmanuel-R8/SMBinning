@@ -1,7 +1,7 @@
-#' @import tidyverse
 
+# Check type and format of parameters which are broadly common to `smbinning` and
+# `smbinning.factor`
 haveParametersError <- function(df, x, y, xIsFactor = FALSE, ...) {
-  requireNamespace("tidyverse")
 
   returnMsg <- ""
 
@@ -52,5 +52,6 @@ haveParametersError <- function(df, x, y, xIsFactor = FALSE, ...) {
       returnMsg <- ""
     }
   }
+
   return(returnMsg)
 }

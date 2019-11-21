@@ -1,8 +1,7 @@
-#' @import assertthat
-#'
 #' @include error_checking.R
-#'
+
 # Begin Metrics
+#
 #' Performance Metrics for a Classification Model
 #'
 #' It computes the classic performance metrics of a scoring model, including AUC, KS and all the relevant ones
@@ -234,7 +233,7 @@ smbinning.metrics <- function(dataset,
     a <- which(names(df) == "MgAUC")
     f <- which(names(df) == "FPR")
     t <- which(names(df) == "TPR")
-    for (i in 1:nrow(df) - 1) {
+    for (i in 1:(nrow(df) - 1)) {
       df[i, a] <- 0.5 * (df[i, t] + df[i + 1, t]) * (df[i, f] - df[i + 1, f])
     }
 

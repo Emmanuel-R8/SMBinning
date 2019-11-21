@@ -1,10 +1,5 @@
-#' @import assertthat
-#' @import stats
-#' @import utils
-#'
 #' @include error_checking.R
 
-# Begin Exploratory Data Analysis
 #' Exploratory Data Analysis (EDA)
 #'
 #' It shows basic statistics for each characteristic in a data frame.
@@ -47,6 +42,7 @@
 #' smbinning.eda(smbsimdf1,
 #'   rounding = 3
 #' )$edapct
+#'
 #' @export
 smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
 
@@ -214,6 +210,7 @@ smbinning.eda <- function(df, rounding = 3, pbar = TRUE) {
 #'   chr = c("chr1", "chr2", "chr3"),
 #'   df = smbsimdf3
 #' )
+#'
 #' @export
 smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   # Initialize empty list of formulas
@@ -223,7 +220,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
   att <- c()
 
   # Iterate through all characteristics
-  for (k in 1:length(chr)) {
+  for (k in seq_len(chr)) {
     v <- t(combn(chr, k))
     nrow <- nrow(v)
     ncol <- ncol(v)
@@ -280,7 +277,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
     startTime <- Sys.time()
   }
 
-  for (i in 1:length(f)) {
+  for (i in seq_len(f)) {
     if (verbose == TRUE) {
       cat("Variable : ", f[i], "\n")
     }
@@ -303,10 +300,9 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
 
 
 
-# Begin Model Scaling
-#' Scaling
+#' Model Coefficient Scaling
 #'
-#' It transforms the coefficients of a logistic regression into scaled points
+#' Transforms the coefficients of a logistic regression into scaled points
 #' based on the following three parameters pre-selected by the analyst: PDO, Score, and Odds.
 #' @param logitraw Logistic regression (glm) that must have specified \code{family=binomial} and
 #' whose variables have been generated with \code{smbinning.gen} or \code{smbinning.factor.gen}.
@@ -436,6 +432,7 @@ smbinning.logitrank <- function(y, chr, df, verbose = FALSE) {
 #'
 #' # Example Generate SQL code from scaled model
 #' smbinning.scoring.sql(smbscaled)
+#'
 #' @export
 smbinning.scaling <- function(logitraw,
                               pdo = 20,
@@ -514,7 +511,7 @@ smbinning.scaling <- function(logitraw,
     names(bincoeff) <- bincoeffname
 
     # Updating bins, their coefficients and adding base bins and their coefficients
-    for (i in 1:length(chrbinname)) {
+    for (i in seq_len(chrbinname)) {
 
       # if not a base bin then next
       if (exists(as.character(chrbinname[i]), where = bincoeff)) {
@@ -578,7 +575,7 @@ smbinning.scaling <- function(logitraw,
 
     # Creating Characteristic
     Characteristic <- list()
-    for (i in 1:length(FullName)) {
+    for (i in seq_len(FullName)) {
       # Characteristic=c(Characteristic, gsub(gsub("[[:punct:]]","",
       # as.character(Attribute[[i,1]])),"",gsub("[[:punct:]]","",FullName[i])))
       Characteristic <- c(Characteristic, gsub("[0-9][0-9] .*$", "", FullName[i]))
@@ -640,7 +637,6 @@ smbinning.scaling <- function(logitraw,
 
 
 
-# Begin Add Points and Score
 #' Generation of Score and Its Weights
 #'
 #' After applying \code{smbinning.scaling} to the model, \code{smbinning.scoring} generates a data frame
@@ -675,7 +671,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
     chrattpts <- as.data.frame(logitscaled)
     chrattpts <- chrattpts[, c("Characteristic", "Attribute", "Points")]
 
-    for (i in 1:length(logitraw$xlevels)) {
+    for (i in seq_len(logitraw$xlevels)) {
       chrname <- names(logitraw$xlevels[i])
 
       # Tmp df for char [i] with attr and points
@@ -687,7 +683,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
       # df=cbind(df,chrtmporiginal=NA)
       # df$chrtmporiginal=df[,colidx] # Populate temporary original characteristic
 
-      for (j in 1:nrow(chrattptstmp)) {
+      for (j in seq_len(chrattptstmp)) {
         df <- within(df, chrtmp[df[, colidx] == logitraw$xlevels[[i]][j]] <-
           chrattptstmp[j, ][3])
       }
@@ -723,7 +719,7 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
 
     # All characteristics
     crhpts <- list()
-    for (i in 1:length(logitraw$xlevels)) {
+    for (i in seq_len(logitraw$xlevels)) {
       crhpts <-
         cbind(crhpts, paste(names(logitraw$xlevels[i]), "Points",
           sep =
@@ -743,4 +739,4 @@ smbinning.scoring.gen <- function(smbscaled, dataset) {
   }
   return(df)
 }
-# End Add Points and Score
+

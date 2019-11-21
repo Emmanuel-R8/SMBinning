@@ -1,8 +1,3 @@
-#' @import dplyr
-#' @import assertthat
-#' @import gsubfn
-#' @import partykit
-#' @import sqldf
 #' @include error_checking.R
 
 
@@ -36,6 +31,7 @@
 #' result$iv # Information value
 #' result$bands # Bins or bands
 #' result$ctree # Decision tree
+#'
 #' @export
 smbinning <- function(df, y, x, p = 0.05, verbose = FALSE) {
 

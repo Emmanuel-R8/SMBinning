@@ -24,7 +24,7 @@ The user should save the output result so it can be used
 with \code{smbinning.plot}, \code{smbinning.sql}, and \code{smbinning.gen.factor}.
 }
 \description{
-It gives the user the ability to combine categories and create new attributes for a given characteristic.
+Gives the user the ability to combine categories and create new attributes for a given characteristic.
 Once these new attribues are created in a list (called \code{groups}), the funtion generates a table for
 the uniques values of a given factor variable.
 }

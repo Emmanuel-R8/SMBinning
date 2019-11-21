@@ -13,7 +13,7 @@ smbinning.sql(ivout)
 A text with the SQL code for binning.
 }
 \description{
-It outputs a SQL code to facilitate the generation of new binned characteristics
+Outputs a SQL code to facilitate the generation of new binned characteristics
 in a SQL environment. User must define table and new characteristic name.
 }
 \examples{
@@ -34,4 +34,5 @@ result <- smbinning.factor.custom(
   c("'W01','W02'", "'W03','W04','W05'",
     "'W06','W07'", "'W08','W09','W10'"))
 smbinning.sql(result)
+
 }

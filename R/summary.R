@@ -1,7 +1,6 @@
-#' @import assertthat
-#'
 #' @include error_checking.R
-#'
+
+
 #' Information Value Summary
 #'
 #' `smbinning.sumiv` gives the user the ability to calculate, in one step, the IV for each characteristic of the dataset.
@@ -40,8 +39,12 @@ smbinning.sumiv <- function(df, y) {
   )
 
   ncol <- ncol(df)
-  sumivt <- data.frame(matrix(ncol = 0, nrow = 0)) # Empty table
-  options(warn = -1) # Turn off warnings
+
+  # Empty table
+  sumivt <- data.frame(matrix(ncol = 0, nrow = 0))
+
+  # Turn off warnings
+  options(warn = -1)
   cat("", "\n")
   pb <- txtProgressBar(
     min = 0,
@@ -52,8 +55,6 @@ smbinning.sumiv <- function(df, y) {
     width = 50
   )
 
-  # t0=Sys.time()
-  # t1=0
   for (i in 1:ncol) {
     smbnum <- smbinning(df, y, colnames(df[i]))
     smbfac <- smbinning.factor(df, y, colnames(df[i]))
@@ -120,4 +121,5 @@ smbinning.sumiv <- function(df, y) {
   cat("", "\n")
   return(sumivt)
 }
-# End Summary IV
+
+
