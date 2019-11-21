@@ -21,5 +21,3 @@ LazyData: true
 RoxygenNote: 7.0.0
 Encoding: UTF-8
 NeedsCompilation: no
-Collate: 
-    'continuous.R'
