@@ -47,8 +47,8 @@ binTableCategorical <- function(df,
   assertNumber(nCat, upper = maxCategories)
 
   # Calculate total Goods and Bads
-  totalGood  <- (df %>% filter(!!ySym == TRUE)  %>% nrow())
-  totalBad   <- (df %>% filter(!!ySym == FALSE) %>% nrow())
+  totalGood  <- df %>% filter(!!ySym == TRUE)  %>% nrow()
+  totalBad   <- df %>% filter(!!ySym == FALSE) %>% nrow()
   totalTotal <- totalGood + totalBad
 
   result <- df %>% select(!!xSym, !!ySym)
@@ -62,8 +62,13 @@ binTableCategorical <- function(df,
     # All counts are identical for each unique pair (x, y)
     distinct(!!xSym, !!ySym, .keep_all = TRUE) %>%
 
-    # Place the Good/Bad counts where they should be
-    pivot_wider(names_from = !!ySym, values_from = Count) %>%
+  # Place the Good/Bad counts where they should be
+    pivot_wider(names_from = !!ySym, values_from = Count)
+
+  # Remove any NA's in case some categories didn't have any true or false
+  result[is.na(result)] <- 0
+
+  result <- result %>%
 
     # Rename to sensible names
     rename(nGood = "TRUE", nBad = "FALSE") %>%
@@ -80,5 +85,5 @@ binTableCategorical <- function(df,
            WoE      = log(pctGood) - log(pctBad),
            IV       = (pctGood - pctBad) * WoE)
 
-  return(list(IV = sum(result$IV), table = result))
+  return(list(IV = sum(result$IV[!is.infinite(result$IV)]), table = result))
 }

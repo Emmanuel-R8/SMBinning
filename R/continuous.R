@@ -1,4 +1,6 @@
 
+
+
 #' Weight of Evidence and Information Value for a continuous variable
 #'
 #' @param df Dataframe containing the two columns of data
@@ -32,12 +34,14 @@ binTableContinuous <-
 
     treeControl <-
       ctree_control(minbucket = ceiling(round(p * nrow(df))))
+
     binTree <- ctree(
       formula(paste(y, "~", x)),
       data = df,
       na.action = na.exclude,
       control = treeControl
     )
+
     if (verbose == TRUE) {
       cat("  Elapsed: ", Sys.time() - startTime, "\n")
     }
@@ -46,7 +50,10 @@ binTableContinuous <-
     if (verbose == TRUE) {
       cat("Number of bins = ", bins, "\n")
     }
-    assertNumber(bins, lower = 2)
+    if (!testNumber(bins, lower = 2)) {
+      warning("Number of bins is not at least 2. Returning NA")
+      return(NA)
+    }
 
     # Number of nodes
     nNodes <- length(binTree)
@@ -62,7 +69,6 @@ binTableContinuous <-
         ifelse(is.numeric(binTree[i]$node$split$breaks),
                binTree[i]$node$split$breaks,
                NA)
-
     }
 
     # Make symbol out of name strings
@@ -74,8 +80,7 @@ binTableContinuous <-
     xMax <- max(df %>% select(!!x) %>% filter(!is.na(!!xSym)))
 
     # Clean up the list of Cuts and add one for everything above the last cut
-    listCuts <-
-      listCuts %>%
+    listCuts <- listCuts %>%
       filter(!is.na(CutPoint)) %>%
       arrange(CutPoint) %>%
       add_row(CutPoint = -Inf, .before = 1) %>%
@@ -138,43 +143,48 @@ binTableContinuous <-
         nrow(xBand %>% filter(!!ySym == FALSE))
     }
 
+    # Remove any NA's in case some categories didn't have any true or false
+    # otherwise this immediately leads to infinite Information Values
+    result[is.na(result)] <- 0
 
-    # Add row for missing / NA values
+
+        # Add row for missing / NA values
     xBand <- df %>%
       select(!!xSym, !!ySym) %>%
       filter(is.na(!!xSym) & !is.na(!!ySym))
 
     cat("Number of missing/NA values: ", nrow(xBand), "\n")
-    if (nrow(xBand) > 0)
-    {
+    if (nrow(xBand) > 0) {
       result <- result %>% add_row(CutNumber = totalBins)
 
-      result[totalBins + 1, "CutPoint"] <- NA
-      result[totalBins + 1, "Min"]      <- NA
-      result[totalBins + 1, "Max"]      <- NA
-      result[totalBins + 1, "Count"]    <- nrow(xBand)
-      result[totalBins + 1, "nGood"]    <-
-        nrow(xBand %>% filter(!!ySym == TRUE))
-      result[totalBins + 1, "nBad"]     <-
-        nrow(xBand %>% filter(!!ySym == FALSE))
 
-      # Fill the rest of the table
-      result <-
-        result %>%
-        mutate(
-          cumCount = cumsum(Count),
-          cumGood  = cumsum(nGood),
-          cumBad   = cumsum(nBad),
-          pctGood  = nGood / totalGood,
-          pctBad   = nBad  / totalBad,
-          Odds     = pctGood / (1 - pctGood),
-          LnOdds   = log(Odds),
-          WoE      = log(pctGood) - log(pctBad),
-          IV       = (pctGood - pctBad) * WoE
-        )
+    result[totalBins + 1, "CutPoint"] <- NA
+    result[totalBins + 1, "Min"]      <- NA
+    result[totalBins + 1, "Max"]      <- NA
+    result[totalBins + 1, "Count"]    <- nrow(xBand)
+    result[totalBins + 1, "nGood"]    <-
+      nrow(xBand %>% filter(!!ySym == TRUE))
+    result[totalBins + 1, "nBad"]     <-
+      nrow(xBand %>% filter(!!ySym == FALSE))
     }
+
+    # Fill the rest of the columns
+    result <-
+      result %>%
+      mutate(
+        cumCount = cumsum(Count),
+        cumGood  = cumsum(nGood),
+        cumBad   = cumsum(nBad),
+        pctGood  = nGood / totalGood,
+        pctBad   = nBad  / totalBad,
+        Odds     = pctGood / (1 - pctGood),
+        LnOdds   = log(Odds),
+        WoE      = log(pctGood) - log(pctBad),
+        IV       = (pctGood - pctBad) * WoE
+      )
+
     # Remove the first -Infinity cut point
     result <- result %>% slice(2:n())
 
-    return(list(IV = sum(result$IV), table = result))
+    return(list(IV = sum(result$IV[!is.infinite(result$IV)]), table = result))
   }
