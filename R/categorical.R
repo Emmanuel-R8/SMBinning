@@ -1,9 +1,14 @@
 
 #' Weight of Evidence and Information Value for a categorical variable
 #'
+#' This function calculates the Weight of Evidence and Infomation value for a particular response.
+#' The variable tested is categorical (factors). The response is assumed to be logical. If not, if
+#' the response takes only 2 values (either factor or numerical), it will be transformed into
+#' logical values. `verbose = TRUE` shows the conversion.
+#'
 #' @param df Dataframe containing the two columns of data
 #' @param x  Name of the categorical variable as a string
-#' @param y  Name of the boolean response as a string
+#' @param y  Name of the logical response variable as a string.
 #' @param maxCategories  maximum number of accepted categories. Default is 5.
 #' @param verbose Boolean to add additional information. Default is \code{FALSE}
 #'
@@ -36,6 +41,7 @@ binTableCategorical <- function(df,
     mutate(!!xSym := as_factor(!!xSym))
 
 
+
   # Check number of categories
   nCat <- df %>% select(!!xSym) %>% n_distinct()
   if (verbose == TRUE) {
@@ -46,10 +52,39 @@ binTableCategorical <- function(df,
   assertNumber(maxCategories)
   assertNumber(nCat, upper = maxCategories)
 
+
+  # Check type of y
+  if (is_logical(df[, y])) {
+    if (verbose == TRUE) {
+      cat("y is logical: OK")
+    }
+  } else {
+
+    # Transforms y to factors
+    df[, y] <- as_factor(df[, y])
+
+    tmp <- nlevels(df[, y])
+    if (verbose == TRUE) {
+      cat("y is not a logical variable. After conversion to factors, y has ", tmp, " levels. (Error if not 2)\n")
+    }
+    assert(tmp == 2)
+
+    tmp <- levels(df[, y])
+    if (verbose == TRUE) {
+      cat("Factors are: ", tmp, "\n")
+    }
+
+    df[, y] <- ifelse( df[, y] == tmp[1], FALSE, TRUE)
+    if (verbose == TRUE) {
+      cat(tmp[1], " recoded as logical FALSE; ", tmp[2], " recoded as logical TRUE.\n")
+    }
+  }
+
+
   # Calculate total Goods and Bads
   totalGood  <- df %>% filter(!!ySym == TRUE)  %>% nrow()
   totalBad   <- df %>% filter(!!ySym == FALSE) %>% nrow()
-  totalTotal <- totalGood + totalBad
+  totalCount <- totalGood + totalBad
 
   result <- df %>% select(!!xSym, !!ySym)
 
@@ -78,6 +113,7 @@ binTableCategorical <- function(df,
            cumCount = cumsum(Count),
            cumGood  = cumsum(nGood),
            cumBad   = cumsum(nBad),
+           pctCount = Count / totalCount,
            pctGood  = nGood / totalGood,
            pctBad   = nBad  / totalBad,
            Odds     = pctGood / (1 - pctGood),

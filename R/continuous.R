@@ -3,6 +3,11 @@
 
 #' Weight of Evidence and Information Value for a continuous variable
 #'
+#' This function calculates the Weight of Evidence and Infomation value for a particular response.
+#' The variable tested is continuous. The response is assumed to be logical. If not, if
+#' the response takes only 2 values (either factor or numerical), it will be transformed into
+#' logical values. `verbose = TRUE` shows the conversion.
+#'
 #' @param df Dataframe containing the two columns of data
 #' @param x  Name of the continuous variable as a string
 #' @param y  Name of the boolean response as a string
@@ -27,17 +32,49 @@ binTableContinuous <-
     assertNumber(p, lower = 0, upper = 0.5)
     assertFlag(verbose)
 
+    # Check type of y
+    if (is_logical(df[, y])) {
+      if (verbose == TRUE) {
+        cat("y is logical: OK")
+      }
+    } else {
+
+      # Transforms y to factors
+      df[, y] <- as_factor(df[, y])
+
+      tmp <- nlevels(df[, y])
+      if (verbose == TRUE) {
+        cat("y is not a logical variable. After conversion to factors, y has ", tmp, " levels. (Error if not 2)\n")
+      }
+      assert(tmp == 2)
+
+      tmp <- levels(df[, y])
+      if (verbose == TRUE) {
+        cat("Factors are: ", tmp, "\n")
+      }
+
+      df[, y] <- ifelse( df[, y] == tmp[1], FALSE, TRUE)
+      if (verbose == TRUE) {
+        cat(tmp[1], " recoded as logical FALSE; ", tmp[2], " recoded as logical TRUE.\n")
+      }
+    }
+
+
     if (verbose == TRUE) {
       cat("Start recursive partitioning.")
       startTime <- Sys.time()
     }
+
+    # Conditional recursive partioning requires 0/1 variable
+    treeFrame <- df[,c(x, y)]
+    treeFrame[, y] <- ifelse(treeFrame[, y], 1, 0)
 
     treeControl <-
       ctree_control(minbucket = ceiling(round(p * nrow(df))))
 
     binTree <- ctree(
       formula(paste(y, "~", x)),
-      data = df,
+      data = treeFrame,
       na.action = na.exclude,
       control = treeControl
     )
@@ -111,7 +148,7 @@ binTableContinuous <-
     # Calculate total Goods and Bads
     totalGood  <- (df %>% filter(!!ySym == TRUE)  %>% nrow())
     totalBad   <- (df %>% filter(!!ySym == FALSE) %>% nrow())
-    totalTotal <- totalGood + totalBad
+    totalCount <- totalGood + totalBad
 
     totalBins <- nrow(listCuts)
 
@@ -175,6 +212,7 @@ binTableContinuous <-
         cumCount = cumsum(Count),
         cumGood  = cumsum(nGood),
         cumBad   = cumsum(nBad),
+        pctCount = Count / totalCount,
         pctGood  = nGood / totalGood,
         pctBad   = nBad  / totalBad,
         Odds     = pctGood / (1 - pctGood),
