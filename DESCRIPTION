@@ -1,4 +1,4 @@
-Package: scorer
+Package: binner
 Type: Package
 Title: Scoring Modeling and Optimal Binning
 Version: 0.001

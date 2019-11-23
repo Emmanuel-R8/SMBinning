@@ -1,4 +1,5 @@
-
+#' @include common.R
+#'
 #' Weight of Evidence and Information Value for a categorical variable
 #'
 #' This function calculates the Weight of Evidence and Infomation value for a particular response.
@@ -12,7 +13,7 @@
 #' @param maxCategories  maximum number of accepted categories. Default is 5.
 #' @param verbose Boolean to add additional information. Default is \code{FALSE}
 #'
-#' @return A list with the total Information Value, and a tibble containing the bins with detailed
+#' @return A list with the total Information Value, types of bins, and a tibble containing the bins with detailed
 #'  information.
 #'
 #' @import checkmate
@@ -21,7 +22,7 @@
 #' @export
 #'
 #' @examples [TODO]
-binTableCategorical <- function(df,
+WoETableCategorical <- function(df,
                                 x,
                                 y,
                                 maxCategories = 5,
@@ -52,33 +53,8 @@ binTableCategorical <- function(df,
   assertNumber(maxCategories)
   assertNumber(nCat, upper = maxCategories)
 
-
-  # Check type of y
-  if (is_logical(df[, y])) {
-    if (verbose == TRUE) {
-      cat("y is logical: OK")
-    }
-  } else {
-
-    # Transforms y to factors
-    df[, y] <- as_factor(df[, y])
-
-    tmp <- nlevels(df[, y])
-    if (verbose == TRUE) {
-      cat("y is not a logical variable. After conversion to factors, y has ", tmp, " levels. (Error if not 2)\n")
-    }
-    assert(tmp == 2)
-
-    tmp <- levels(df[, y])
-    if (verbose == TRUE) {
-      cat("Factors are: ", tmp, "\n")
-    }
-
-    df[, y] <- ifelse( df[, y] == tmp[1], FALSE, TRUE)
-    if (verbose == TRUE) {
-      cat(tmp[1], " recoded as logical FALSE; ", tmp[2], " recoded as logical TRUE.\n")
-    }
-  }
+  # Make sure that the content of df[,y] is boolean
+  df <- ensureLogical(df, y, verbose = verbose)
 
 
   # Calculate total Goods and Bads
@@ -121,5 +97,7 @@ binTableCategorical <- function(df,
            WoE      = log(pctGood) - log(pctBad),
            IV       = (pctGood - pctBad) * WoE)
 
-  return(list(IV = sum(result$IV[!is.infinite(result$IV)]), table = result))
+  return(list(IV = sum(result$IV[!is.infinite(result$IV)]),
+              type = "categorical",
+              table = result))
 }

@@ -22,7 +22,10 @@ A list with the total Information Value, and a tibble containing the bins with d
  information.
 }
 \description{
-Weight of Evidence and Information Value for a continuous variable
+This function calculates the Weight of Evidence and Infomation value for a particular response.
+The variable tested is continuous. The response is assumed to be logical. If not, if
+the response takes only 2 values (either factor or numerical), it will be transformed into
+logical values. `verbose = TRUE` shows the conversion.
 }
 \examples{
 [TODO]
