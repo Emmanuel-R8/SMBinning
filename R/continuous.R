@@ -47,12 +47,13 @@ WoETableContinuous <-
 
       # Transforms y to boolean
       df <- ensureLogical(df, y, verbose = verbose)
+    }
 
-      if (verbose == TRUE) {
-        cat("Start recursive partitioning. \n")
-        startTime <- Sys.time()
-      }
-}
+    if (verbose == TRUE) {
+      cat("Start recursive partitioning. \n")
+      startTime <- Sys.time()
+    }
+
       # Conditional recursive partioning requires 0/1 variable
       treeFrame <- df %>%
         mutate(!!ySym := if_else(!!ySym, 1, 0)) %>%
@@ -81,7 +82,7 @@ WoETableContinuous <-
         cat("Number of bins = ", bins, "\n")
       }
       if (!testNumber(bins, lower = 2)) {
-        warning("Number of bins for x is not at least 2. Returning NA. (Hint: maybe try to convert x to factors from numeric)")
+        warning("Number of bins for x is not at least 2. Returning NA. (Hint: maybe try to convert x from numeric to factors)\n")
         return(NA)
       }
 

@@ -1,4 +1,7 @@
+
+
 #' @include common.R
+#'
 #' @include continuous.R
 #' @include categorical.R
 #'
@@ -13,7 +16,7 @@
 #' @param x
 #' @param y
 #' @param p
-#' @param verbose
+#' @param verbose Boolean to add additional information. Default is \code{FALSE}
 #'
 #' @import checkmate
 #' @import tidyverse
@@ -89,3 +92,170 @@ WoETable <-
 
     return(result)
   }
+
+
+
+#' Create a table that categorises a variable into the bins described by a WoE table
+#'
+#' This function takes a WoE table of a particular variable describing its bins, and takes the observations of the
+#' variable. It creates a tibble of variables (one per bin) containing 0 or 1 whether the original observations
+#' fall into the relevant bin.
+#'
+#' @param df Dataframe containing the at least one column named `varName`
+#' @param varName Name of the variable (string format) which will be binned follwoing its Weight of Evidence
+#' @param woeTable Tibble containing the Weight of Evidence table created by WoETable for `varName`
+#' @param verbose Boolean to add additional information. Default is \code{FALSE}
+#' @return Tibble of categories containing 0/1
+#' @import checkmate
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+categoriseFromWoE <- function(df,
+                              varName,
+                              woeTable,
+                              verbose = FALSE) {
+  assertDataFrame(df)
+  assertTibble(woeTable)
+  assertString(varName)
+
+  # Check if there is a variable with that name in df
+  index <- which(names(df) == varName)
+  if (index == 0) {
+    stop("df does not contain a variable named varName")
+  }
+
+  if (verbose == TRUE) {
+    cat("All asserts are OK \n")
+  }
+
+
+  vCleanName <- str_remove(varName, " ")
+  vSym <- sym(varName)
+  if (verbose == TRUE) {
+    cat("Clean variable name: \"", vCleanName, "\"\n")
+  }
+
+  if (names(woeTable)[1] == "CutNumber") {
+    vType <- "numeric"
+  } else{
+    vType <- "categorical"
+  }
+  if (verbose == TRUE) {
+    cat("Variable type is", vType, "\n")
+  }
+
+  binned <- df %>% select(!!vSym)
+
+  if (vType == "categorical") {
+    if (verbose == TRUE) {
+      cat("Type is categorical\n")
+    }
+
+    # Go though each bin
+    for (b in 1:nrow(woeTable)) {
+      # Current bin factor name
+      vFactor <- woeTable[[b, varName]]
+      if (verbose == TRUE) {
+        cat("Current factor is:", as.character(vFactor), "\n")
+      }
+
+      if (is.na(vFactor)) {
+        vColumn <- paste0(vCleanName, "=NA")
+        if (verbose == TRUE) {
+          cat("Creating column ", vColumn, "\n")
+        }
+        vColumn <- sym(vColumn)
+
+        # Create a new column
+        binned <- binned %>%
+
+          # Create a new column containing whether the variable is in the bin
+          mutate(!!vColumn := if_else(is.na(!!vSym), 1, 0))
+
+      } else {
+        # create bin name
+        vColumn <- paste0(vCleanName, "=", as.character(vFactor))
+        if (verbose == TRUE) {
+          cat("Creating column ", vColumn, "\n")
+        }
+        vColumn <- sym(vColumn)
+
+        # Create a new column
+        binned <- binned %>%
+
+          # Create a new column containing whether the variable is in the bin
+          mutate(!!vColumn := if_else(is.na(!!vSym),
+                                      0,
+                                      if_else(!!vSym ==  vFactor, 1, 0)))
+      }
+    }
+
+
+    # Else is variable type is continuous
+  } else {
+    if (verbose == TRUE) {
+      cat("Type is numeric\n")
+    }
+
+    # Go though each bin
+    for (b in 1:nrow(woeTable)) {
+      # Min and Max of current bin
+      vMin <- woeTable[[b, "Min"]]
+      vMax <- woeTable[[b, "Max"]]
+      if (verbose == TRUE) {
+        cat(
+          "Current bin is: Min = ",
+          as.character(vMin),
+          " and Max = ",
+          as.character(vMax),
+          "\n"
+        )
+      }
+
+
+      if (is.na(vMin)) {
+        vColumn <- paste0(vCleanName, "=NA")
+        if (verbose == TRUE) {
+          cat("Creating column ", vColumn, "\n")
+        }
+        vColumn <- sym(vColumn)
+
+        # Create a new column
+        binned <- binned %>%
+
+          # Create a new column containing whether the variable is in the bin
+          mutate(!!vColumn := is.na(!!vSym))
+
+      } else {
+        # create bin name
+        vColumn <-
+          paste0(as.character(round(vMin, digits = 3)),
+                 "<",
+                 vCleanName,
+                 "<=",
+                 as.character(round(vMax, digits = 3)))
+        if (verbose == TRUE) {
+          cat("Creating column ", vColumn, "\n")
+        }
+        vColumn <- sym(vColumn)
+
+        # Create a new column
+        binned <- binned %>%
+
+          # Create a new column containing whether the variable is in the bin
+          mutate(!!vColumn := if_else(is.na(!!vSym),
+                                      0,
+                                      if_else((!!vSym !=  vMin) &
+                                                between(!!vSym, vMin, vMax), 1, 0
+                                      )))
+      }
+    }
+
+  }
+
+  # Remove the original variable to only keep the bins
+  binned <- binned %>% select(-!!vSym)
+
+
+}

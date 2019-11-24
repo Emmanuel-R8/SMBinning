@@ -13,11 +13,15 @@ Depends:
     tidyverse
 Imports:
     checkmate,
-    nlme,
     tidyverse,
     partykit
 License: GPL (>= 2)
 LazyData: true
-RoxygenNote: 7.0.0
+RoxygenNote: 7.0.1
 Encoding: UTF-8
 NeedsCompilation: no
+Collate: 
+    'common.R'
+    'categorical.R'
+    'continuous.R'
+    'mixed.R'
