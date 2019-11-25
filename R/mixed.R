@@ -1,5 +1,6 @@
 
 
+
 #' @include common.R
 #'
 #' @include continuous.R
@@ -126,12 +127,14 @@ categoriseFromWoE <- function(df,
   }
 
   if (verbose == TRUE) {
+    cat("categoriseFromWoE with variable ", varName, "\n")
     cat("All asserts are OK \n")
+    cat("Variable has index ", index, " in dataframe \n")
   }
 
 
-  vCleanName <- str_remove(varName, " ")
   vSym <- sym(varName)
+  vCleanName <- str_remove(varName, " ")
   if (verbose == TRUE) {
     cat("Clean variable name: \"", vCleanName, "\"\n")
   }
@@ -145,7 +148,8 @@ categoriseFromWoE <- function(df,
     cat("Variable type is", vType, "\n")
   }
 
-  binned <- df %>% select(!!vSym)
+
+  binned <- df[, varName]
 
   if (vType == "categorical") {
     if (verbose == TRUE) {
@@ -192,7 +196,7 @@ categoriseFromWoE <- function(df,
     }
 
 
-    # Else is variable type is continuous
+    # Else is variable type is numeric
   } else {
     if (verbose == TRUE) {
       cat("Type is numeric\n")
@@ -225,7 +229,7 @@ categoriseFromWoE <- function(df,
         binned <- binned %>%
 
           # Create a new column containing whether the variable is in the bin
-          mutate(!!vColumn := is.na(!!vSym))
+          mutate(!!vColumn := if_else(is.na(!!vSym), 1, 0))
 
       } else {
         # create bin name
@@ -244,18 +248,25 @@ categoriseFromWoE <- function(df,
         binned <- binned %>%
 
           # Create a new column containing whether the variable is in the bin
-          mutate(!!vColumn := if_else(is.na(!!vSym),
-                                      0,
-                                      if_else((!!vSym !=  vMin) &
-                                                between(!!vSym, vMin, vMax), 1, 0
-                                      )))
+          dplyr::mutate(!!vColumn := dplyr::if_else(
+            is.na(!!vSym),
+            0,
+            dplyr::if_else((!!vSym !=  vMin) &
+                             dplyr::between(!!vSym, vMin, vMax),
+                           1,
+                           0
+            )
+          ))
       }
     }
 
   }
 
   # Remove the original variable to only keep the bins
-  binned <- binned %>% select(-!!vSym)
+  #binned <- binned %>% select(-!!vSym)
 
+  return(binned[, 2:length(names(binned))])
 
 }
+
+

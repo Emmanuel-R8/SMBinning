@@ -34,17 +34,17 @@ WoETableCategorical <- function(df,
 
 
   # Make symbol out of name strings
-  xSym <- sym(x)
-  ySym <- sym(y)
+  xSym <- dplyr::sym(x)
+  ySym <- dplyr::sym(y)
 
   # Enforce x to be a factor
   df <- df %>%
-    mutate(!!xSym := as_factor(!!xSym))
+    dplyr::mutate(!!xSym := as_factor(!!xSym))
 
 
 
   # Check number of categories
-  nCat <- df %>% select(!!xSym) %>% n_distinct()
+  nCat <- df %>% dplyr::select(!!xSym) %>% n_distinct()
   if (verbose == TRUE) {
     cat("Number of categories: ", nCat, "\n")
     cat("Categories: ", levels(df[, x, drop = TRUE]), "\n")
@@ -58,23 +58,23 @@ WoETableCategorical <- function(df,
 
 
   # Calculate total Goods and Bads
-  totalGood  <- df %>% filter(!!ySym == TRUE)  %>% nrow()
-  totalBad   <- df %>% filter(!!ySym == FALSE) %>% nrow()
+  totalGood  <- df %>% dplyr::filter(!!ySym == TRUE)  %>% nrow()
+  totalBad   <- df %>% dplyr::filter(!!ySym == FALSE) %>% nrow()
   totalCount <- totalGood + totalBad
 
-  result <- df %>% select(!!xSym, !!ySym)
+  result <- df %>% dplyr::select(!!xSym, !!ySym)
 
   result <- result %>%
     # Goods and Bads in each category
-    group_by(!!xSym, !!ySym) %>%
-    mutate(Count = n()) %>%
-    ungroup() %>%
+    dplyr::group_by(!!xSym, !!ySym) %>%
+    dplyr::mutate(Count = n()) %>%
+    dplyr::ungroup() %>%
 
     # All counts are identical for each unique pair (x, y)
-    distinct(!!xSym, !!ySym, .keep_all = TRUE) %>%
+    dplyr::distinct(!!xSym, !!ySym, .keep_all = TRUE) %>%
 
-  # Place the Good/Bad counts where they should be
-    pivot_wider(names_from = !!ySym, values_from = Count)
+    # Place the Good/Bad counts where they should be
+    tidyr::pivot_wider(names_from = !!ySym, values_from = Count)
 
   # Remove any NA's in case some categories didn't have any true or false
   result[is.na(result)] <- 0
@@ -82,22 +82,26 @@ WoETableCategorical <- function(df,
   result <- result %>%
 
     # Rename to sensible names
-    rename(nGood = "TRUE", nBad = "FALSE") %>%
+    dplyr::rename(nGood = "TRUE", nBad = "FALSE") %>%
 
     # Add all the other columns
-    mutate(Count = nGood + nBad,
-           cumCount = cumsum(Count),
-           cumGood  = cumsum(nGood),
-           cumBad   = cumsum(nBad),
-           pctCount = Count / totalCount,
-           pctGood  = nGood / totalGood,
-           pctBad   = nBad  / totalBad,
-           Odds     = pctGood / (1 - pctGood),
-           LnOdds   = log(Odds),
-           WoE      = log(pctGood) - log(pctBad),
-           IV       = (pctGood - pctBad) * WoE)
+    dplyr::mutate(
+      Count = nGood + nBad,
+      cumCount = cumsum(Count),
+      cumGood  = cumsum(nGood),
+      cumBad   = cumsum(nBad),
+      pctCount = Count / totalCount,
+      pctGood  = nGood / totalGood,
+      pctBad   = nBad  / totalBad,
+      Odds     = pctGood / (1 - pctGood),
+      LnOdds   = log(Odds),
+      WoE      = log(pctGood) - log(pctBad),
+      IV       = (pctGood - pctBad) * WoE
+    )
 
-  return(list(IV = sum(result$IV[!is.infinite(result$IV)]),
-              type = "categorical",
-              table = result))
+  return(list(
+    IV = sum(result$IV[!is.infinite(result$IV)]),
+    type = "categorical",
+    table = result
+  ))
 }
