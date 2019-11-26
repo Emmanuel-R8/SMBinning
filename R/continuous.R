@@ -213,10 +213,12 @@ WoETableContinuous <-
         pctCount = Count / totalCount,
         pctGood  = nGood / totalGood,
         pctBad   = nBad  / totalBad,
-        Odds     = pctGood / (1 - pctGood),
+        pctGoodBin  = nGood / Count,
+        pctBadBin   = nBad  / Count,
+        Odds     = pctGoodBin / (1 - pctGoodBin),
         LnOdds   = log(Odds),
-        WoE      = log(pctGood) - log(pctBad),
-        IV       = (pctGood - pctBad) * WoE
+        WoE      = log(pctGoodBin) - log(pctBadBin),
+        IV       = (pctGoodBin - pctBadBin) * WoE
       )
 
     # Remove the first -Infinity cut point
