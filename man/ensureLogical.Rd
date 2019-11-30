@@ -7,7 +7,9 @@
 ensureLogical(df, y, verbose = FALSE)
 }
 \arguments{
-\item{y}{}
+\item{df}{Dataframe}
+
+\item{y}{Column to check}
 }
 \value{
 Reformatted data frame

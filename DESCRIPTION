@@ -16,7 +16,7 @@ Imports:
     tidyverse,
     partykit
 License: GPL (>= 2)
-LazyData: true
+LazyData: false
 RoxygenNote: 7.0.1
 Encoding: UTF-8
 NeedsCompilation: no

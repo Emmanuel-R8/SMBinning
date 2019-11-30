@@ -2,8 +2,8 @@
 #'
 #' This function is not exported and used in WoE table creation
 #'
-#' @param df
-#' @param y
+#' @param df Dataframe
+#' @param y Column to check
 #'
 #' @return Reformatted data frame
 #' @examplesm [TODO]
@@ -68,11 +68,11 @@ ensureLogical <- function(df, y, verbose = FALSE) {
     }
 
     # and transforms the factors into booleans (should reflect alphabetical order which is good since 0/1 and FALSE/TRUE work like that)
-    df[, y] <- ifelse(df[, y] == tmp[1], FALSE, TRUE)
+    df[, y] <- if_else(df[, y] == dfLevels[1], FALSE, TRUE)
     if (verbose == TRUE) {
-      cat(tmp[1],
+      cat(dfLevels[1],
           " recoded as logical FALSE; ",
-          tmp[2],
+          dfLevels[2],
           " recoded as logical TRUE.\n")
     }
   }
