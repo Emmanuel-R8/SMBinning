@@ -155,9 +155,6 @@ categoriseFromWoE <- function(df,
     as_tibble() %>%
     select(!!vSym)
 
-  names(binned) <- varName
-
-  binned <- binned %>% mutate(thisIsTheCategory = NA)
 
   if (verbose == TRUE) {
     cat("df has dimensions ", dim(df), "\n")
@@ -260,9 +257,12 @@ categoriseFromWoE <- function(df,
       }
     }
 
-    # Transforms binned from stings to factors
-    binned <- as_factor(binned[["thisIsTheCategory"]])
-    names(binned) <- varName
+    # Transforms binned from stings to factors, and rename the column properly
+    binned <-
+      binned %>%
+      select(thisIsTheCategory) %>%
+      mutate(thisIsTheCategory = as_factor(thisIsTheCategory)) %>%
+      rename(!!vSym := thisIsTheCategory)
 
     if (verbose == TRUE) {
       cat("binned has ", nlevels(binned),
@@ -350,7 +350,8 @@ categoriseFromWoE.Wide <- function(df,
       }
 
       if (is.na(vFactor)) {
-        vColumn <- paste0(vCleanName, "=NA")
+        vColumn <- paste0("(", vCleanName, ") ",
+                          vCleanName, "=NA")
         if (verbose == TRUE) {
           cat("Creating column ", vColumn, "\n")
         }
@@ -364,7 +365,8 @@ categoriseFromWoE.Wide <- function(df,
 
       } else {
         # create bin name
-        vColumn <- paste0(vCleanName, "=", as.character(vFactor))
+        vColumn <- paste0("(", vCleanName, ") ",
+                          vCleanName, "=", as.character(vFactor))
         if (verbose == TRUE) {
           cat("Creating column ", vColumn, "\n")
         }
@@ -408,7 +410,8 @@ categoriseFromWoE.Wide <- function(df,
 
 
       if (is.na(vMin)) {
-        vColumn <- paste0(vCleanName, "=NA")
+        vColumn <- paste0("(", vCleanName, ") ",
+                          vCleanName, "=NA")
         if (verbose == TRUE) {
           cat("Creating column ", vColumn, "\n")
         }
@@ -423,7 +426,8 @@ categoriseFromWoE.Wide <- function(df,
       } else {
         # create bin name
         vColumn <-
-          paste0(as.character(round(vMin, digits = 3)),
+          paste0("(", vCleanName, ") ",
+                 as.character(round(vMin, digits = 3)),
                  "<",
                  vCleanName,
                  "<=",
@@ -443,9 +447,7 @@ categoriseFromWoE.Wide <- function(df,
             dplyr::if_else((!!vSym !=  vMin) &
                              dplyr::between(!!vSym, vMin, vMax),
                            1,
-                           0
-            )
-          ))
+                           0)))
       }
     }
 
