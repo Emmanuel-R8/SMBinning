@@ -108,6 +108,7 @@ WoETableContinuous <-
     # Min and Max of x
     xMin <-
       min(df %>% dplyr::select(!!x) %>% dplyr::filter(!is.na(!!xSym)))
+
     xMax <-
       max(df %>% dplyr::select(!!x) %>% dplyr::filter(!is.na(!!xSym)))
 
@@ -123,28 +124,28 @@ WoETableContinuous <-
     # Prepare a result tibble
     result <- listCuts %>%
       dplyr::mutate(
-        Min = 0.0,
-        Max = 0.0,
-        Count = 0.0,
-        nGood = 0.0,
-        nBad = 0.0,
-        cumCount = 0.0,
-        cumGood = 0.0,
-        cumBad = 0.0,
-        pctCount = 0.0,
-        pctGood = 0.0,
-        pctBad = 0.0,
-        Odds = 0.0,
-        LnOdds = 0.0,
-        WoE = 0.0,
-        IV = 0.0
+        Min         = 0.0,
+        Max         = 0.0,
+        Count       = 0.0,
+        nGood       = 0.0,
+        nBad        = 0.0,
+        cumCount    = 0.0,
+        cumGood     = 0.0,
+        cumBad      = 0.0,
+        pctCount    = 0.0,
+        pctGood     = 0.0,
+        pctBad      = 0.0,
+        OddsInBin   = 0.0,
+        LnOddsInBin = 0.0,
+        WoEInBin    = 0.0,
+        IVInBin     = 0.0,
+        WoE         = 0.0,
+        IV          = 0.0
       )
 
     # Calculate total Goods and Bads
-    totalGood  <-
-      (df %>% dplyr::filter(!!ySym == TRUE)  %>% nrow())
-    totalBad   <-
-      (df %>% dplyr::filter(!!ySym == FALSE) %>% nrow())
+    totalGood  <- (df %>% dplyr::filter(!!ySym == TRUE)  %>% nrow())
+    totalBad   <- (df %>% dplyr::filter(!!ySym == FALSE) %>% nrow())
     totalCount <- totalGood + totalBad
 
     totalBins <- nrow(listCuts)
@@ -169,13 +170,11 @@ WoETableContinuous <-
         dplyr::filter(between(!!xSym, minBinCut, maxBinCut) &
                         (!!xSym) != minBinCut)
 
-      result[currentCut, "Min"]      <- minBinCut
-      result[currentCut, "Max"]      <- maxBinCut
-      result[currentCut, "Count"]    <- nrow(xBand)
-      result[currentCut, "nGood"]    <-
-        nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
-      result[currentCut, "nBad"]     <-
-        nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
+      result[currentCut, "Min"]   <- minBinCut
+      result[currentCut, "Max"]   <- maxBinCut
+      result[currentCut, "Count"] <- nrow(xBand)
+      result[currentCut, "nGood"] <- nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
+      result[currentCut, "nBad"]  <- nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
     }
 
     # Remove any NA's in case some categories didn't have any true or false
@@ -192,33 +191,36 @@ WoETableContinuous <-
     if (nrow(xBand) > 0) {
       result <- result %>% add_row(CutNumber = totalBins)
 
-
       result[totalBins + 1, "CutPoint"] <- NA
       result[totalBins + 1, "Min"]      <- NA
       result[totalBins + 1, "Max"]      <- NA
       result[totalBins + 1, "Count"]    <- nrow(xBand)
-      result[totalBins + 1, "nGood"]    <-
-        nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
-      result[totalBins + 1, "nBad"]     <-
-        nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
+      result[totalBins + 1, "nGood"]    <- nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
+      result[totalBins + 1, "nBad"]     <- nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
     }
 
     # Fill the rest of the columns
     result <-
       result %>%
       dplyr::mutate(
-        cumCount = cumsum(Count),
-        cumGood  = cumsum(nGood),
-        cumBad   = cumsum(nBad),
-        pctCount = Count / totalCount,
-        pctGood  = nGood / totalGood,
-        pctBad   = nBad  / totalBad,
+        cumCount    = cumsum(Count),
+        cumGood     = cumsum(nGood),
+        cumBad      = cumsum(nBad),
+
+        pctCount    = Count / totalCount,
+        pctGood     = nGood / totalGood,
+        pctBad      = nBad  / totalBad,
         pctGoodBin  = nGood / Count,
         pctBadBin   = nBad  / Count,
-        Odds     = pctGoodBin / (1 - pctGoodBin),
-        LnOdds   = log(Odds),
-        WoE      = log(pctGoodBin) - log(pctBadBin),
-        IV       = (pctGoodBin - pctBadBin) * WoE
+
+        OddsInBin   = pctGoodBin / (1 - pctGoodBin),
+        LnOddsInBin = log(OddsInBin),
+
+        WoEInBin    = log(pctGoodBin) - log(pctBadBin),
+        IVInBin     = (pctGoodBin - pctBadBin) * WoE,
+
+        WoE         = log(pctGood) - log(pctBad),
+        IV          = (pctGood - pctBad) * WoE
       )
 
     # Remove the first -Infinity cut point

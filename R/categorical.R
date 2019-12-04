@@ -27,10 +27,10 @@ WoETableCategorical <- function(df,
                                 y,
                                 maxCategories = 5,
                                 verbose = FALSE) {
-  assertDataFrame(df)
-  assertString(x)
-  assertString(y)
-  assertFlag(verbose)
+  checkmate::assertDataFrame(df)
+  checkmate::assertString(x)
+  checkmate::assertString(y)
+  checkmate::assertFlag(verbose)
 
 
   # Make symbol out of name strings
@@ -44,62 +44,111 @@ WoETableCategorical <- function(df,
 
 
   # Check number of categories
-  nCat <- df %>% dplyr::select(!!xSym) %>% n_distinct()
+  nFactor <- df %>% dplyr::select(!!xSym) %>% dplyr::n_distinct()
   if (verbose == TRUE) {
-    cat("Number of categories: ", nCat, "\n")
-    cat("Categories: ", levels(df[, x, drop = TRUE]), "\n")
+    cat("Number of categories: ", nFactor, "\n")
+    cat("Categories: ", levels(df[, x, drop = TRUE][[1]]), "\n")
   }
 
-  assertNumber(maxCategories)
-  assertNumber(nCat, upper = maxCategories)
+  checkmate::assertNumber(maxCategories)
+  checkmate::assertNumber(nFactor, upper = maxCategories)
 
   # Make sure that the content of df[,y] is boolean
   df <- ensureLogical(df, y, verbose = verbose)
+  if (verbose == TRUE) {
+    cat("DOUBLE CHECK: dataframe dimension after ensureLogical: ", dim(df), "\n")
+    cat("Selecting only two columns to work with: ", x, "and ", y, "\n\n")
+  }
 
+  df <- df %>% dplyr::select(!!xSym, !!ySym)
+  factorNames <- levels(df[, x][[1]])
+
+  if (verbose == TRUE) {
+    cat("DOUBLE CHECK: Number of categories: ", nFactor, "  ---  ",
+        "Categories: ", as.character(factorNames), "\n")
+    cat("DOUBLE CHECK: dataframe dimension: ", dim(df), "\n")
+  }
+
+  # Prepare a result tibble
+  result <-
+    dplyr::tibble(!!xSym := factorNames) %>%
+    dplyr::mutate(
+      Count       = 0.0,
+      nGood       = 0.0,
+      nBad        = 0.0,
+      cumCount    = 0.0,
+      cumGood     = 0.0,
+      cumBad      = 0.0,
+      pctCount    = 0.0,
+      pctGood     = 0.0,
+      pctBad      = 0.0,
+      OddsInBin   = 0.0,
+      LnOddsInBin = 0.0,
+      WoEInBin    = 0.0,
+      IVInBin     = 0.0,
+      WoE         = 0.0,
+      IV          = 0.0
+    )
 
   # Calculate total Goods and Bads
-  totalGood  <- df %>% dplyr::filter(!!ySym == TRUE)  %>% nrow()
-  totalBad   <- df %>% dplyr::filter(!!ySym == FALSE) %>% nrow()
+  totalGood  <- (df %>% dplyr::filter(!!ySym == TRUE)  %>% nrow())
+  totalBad   <- (df %>% dplyr::filter(!!ySym == FALSE) %>% nrow())
   totalCount <- totalGood + totalBad
 
-  result <- df %>% dplyr::select(!!xSym, !!ySym)
+  # For each factor/bin, fill in the number of Goods and Bads
+  for (currentBin in 1:nFactor) {
 
-  result <- result %>%
-    # Goods and Bads in each category
-    dplyr::group_by(!!xSym, !!ySym) %>%
-    dplyr::mutate(Count = n()) %>%
-    dplyr::ungroup() %>%
+    # Name of the factor being considered
+    factorName <- factorNames[currentBin]
 
-    # All counts are identical for each unique pair (x, y)
-    dplyr::distinct(!!xSym, !!ySym, .keep_all = TRUE) %>%
+    if (verbose == TRUE) {
+      cat(" Bin row number: ", currentBin,
+          ", name = ", factorName, "\n")
+    }
 
-    # Place the Good/Bad counts where they should be
-    tidyr::pivot_wider(names_from = !!ySym, values_from = Count)
+    # Select the data with that factor
+    xBand <- df %>% dplyr::filter(!!xSym == factorName)
+
+    result[currentBin, "nGood"] <- nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
+    result[currentBin, "nBad"]  <- nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
+  }
+
 
   # Remove any NA's in case some categories didn't have any true or false
+  # otherwise this immediately leads to infinite Information Values
   result[is.na(result)] <- 0
 
-  result <- result %>%
 
-    # Rename to sensible names
-    dplyr::rename(nGood = "TRUE", nBad = "FALSE") %>%
-
-    # Add all the other columns
+  # Fill the rest of the columns
+  result <-
+    result %>%
     dplyr::mutate(
-      Count = nGood + nBad,
-      cumCount = cumsum(Count),
-      cumGood  = cumsum(nGood),
-      cumBad   = cumsum(nBad),
-      pctCount = Count / totalCount,
-      pctGood  = nGood / totalGood,
-      pctBad   = nBad  / totalBad,
+      Count       = nGood + nBad,
+      cumCount    = cumsum(Count),
+      cumGood     = cumsum(nGood),
+      cumBad      = cumsum(nBad),
+
+      pctCount    = Count / totalCount,
+      pctGood     = nGood / totalGood,
+      pctBad      = nBad  / totalBad,
       pctGoodBin  = nGood / Count,
       pctBadBin   = nBad  / Count,
-      Odds     = pctGoodBin / (1 - pctGoodBin),
-      LnOdds   = log(Odds),
-      WoE      = log(pctGoodBin) - log(pctBadBin),
-      IV       = (pctGoodBin - pctBadBin) * WoE
+
+      OddsInBin   = pctGoodBin / (1 - pctGoodBin),
+      LnOddsInBin = log(OddsInBin),
+
+      WoEInBin    = log(pctGoodBin) - log(pctBadBin),
+      IVInBin     = (pctGoodBin - pctBadBin) * WoE,
+
+      WoE         = log(pctGood) - log(pctBad),
+      IV          = (pctGood - pctBad) * WoE
     )
+
+  if (verbose == TRUE) {
+    cat("Columns in the result dataframe before adding the WoE and IV: ", names(result), "\n")
+    cat("Categories: ", levels(df[, x, drop = TRUE]), "\n")
+  }
+
 
   return(list(
     IV = sum(result$IV[!is.infinite(result$IV)]),

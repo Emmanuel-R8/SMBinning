@@ -2,7 +2,7 @@ Package: binner
 Type: Package
 Title: Scoring Modeling and Optimal Binning
 Version: 0.001
-Date: 2019-11-21
+Date: 2019-12-04
 Authors@R: c(
     person("Emmanuel", "Rialland", email = "emmanuel.rialland@gmail.com", role = c("aut", "cre")))
 Description: A set of functions to build a scoring model.
@@ -17,7 +17,6 @@ Imports:
     partykit
 License: GPL (>= 2)
 LazyData: false
-RoxygenNote: 7.0.1
 Encoding: UTF-8
 NeedsCompilation: no
 Collate: 

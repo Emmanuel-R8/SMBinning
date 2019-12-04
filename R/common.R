@@ -6,12 +6,16 @@
 #' @param y Column to check
 #'
 #' @return Reformatted data frame
+#'
+#' @import checkmate
+#' @import tidyverse
+#'
 #' @examplesm [TODO]
 #'
 ensureLogical <- function(df, y, verbose = FALSE) {
   #
-  assertDataFrame(df)
-  assertString(y)
+  checkmate::assertDataFrame(df)
+  checkmate::assertString(y)
 
   if (verbose == TRUE) {
     cat("df is a dataframe with variables: ", names(df), "\n")
@@ -20,7 +24,7 @@ ensureLogical <- function(df, y, verbose = FALSE) {
   }
 
   # Make symbol out of name strings
-  ySym <- sym(y)
+  ySym <- dplyr::sym(y)
 
   #
   # Check type of y
@@ -30,7 +34,7 @@ ensureLogical <- function(df, y, verbose = FALSE) {
   # If class is already logical, all OK
   if (yClass == "logical") {
     if (verbose == TRUE) {
-      cat("y is logical: OK")
+      cat("y is logical: OK\n")
     }
   } else {
     # Otherwise, first transforms y to factors
@@ -39,7 +43,7 @@ ensureLogical <- function(df, y, verbose = FALSE) {
     }
 
     df <- df %>%
-      mutate(!!ySym := as_factor(!!ySym))
+      checkmate::mutate(!!ySym := as_factor(!!ySym))
 
     # For some reason, levels doesn't work on tibles
     dfLevels <- levels(as.data.frame(df)[, y])
@@ -48,7 +52,7 @@ ensureLogical <- function(df, y, verbose = FALSE) {
       cat("After conversion to factors, factors are: ",
           dfLevels, " --- and starting factors have become:",
           as.character(head(df[, y])),
-          "\n")
+          "   ---   dataframe dimension: ", dim(df), "\n")
     }
 
 
@@ -61,14 +65,14 @@ ensureLogical <- function(df, y, verbose = FALSE) {
         " levels. (Error will be thrown if not 2)\n"
       )
     }
-    assert(numberLevelsy == 2)
+    checkmate::assert(numberLevelsy == 2)
 
     if (verbose == TRUE) {
       cat("Factors are: ", dfLevels, "\n")
     }
 
     # and transforms the factors into booleans (should reflect alphabetical order which is good since 0/1 and FALSE/TRUE work like that)
-    df[, y] <- if_else(df[, y] == dfLevels[1], FALSE, TRUE)
+    df[, y] <- checkmate::if_else(df[, y] == dfLevels[1], FALSE, TRUE)
     if (verbose == TRUE) {
       cat(dfLevels[1],
           " recoded as logical FALSE; ",
