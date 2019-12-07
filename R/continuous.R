@@ -124,6 +124,7 @@ WoETableContinuous <-
     # Prepare a result tibble
     result <- listCuts %>%
       dplyr::mutate(
+        name        = "",
         Min         = 0.0,
         Max         = 0.0,
         Count       = 0.0,
@@ -175,6 +176,10 @@ WoETableContinuous <-
       result[currentCut, "Count"] <- nrow(xBand)
       result[currentCut, "nGood"] <- nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
       result[currentCut, "nBad"]  <- nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
+
+      result[currentCut, "Name"]  <- paste0(as.character(minBinCut), "<",
+                                            as.character(currentCut), "<=",
+                                            as.character(maxBinCut))
     }
 
     # Remove any NA's in case some categories didn't have any true or false

@@ -56,23 +56,17 @@ WoETableCategorical <- function(df,
   # Make sure that the content of df[,y] is boolean
   df <- ensureLogical(df, y, verbose = verbose)
   if (verbose == TRUE) {
-    cat("DOUBLE CHECK: dataframe dimension after ensureLogical: ", dim(df), "\n")
     cat("Selecting only two columns to work with: ", x, "and ", y, "\n\n")
   }
 
   df <- df %>% dplyr::select(!!xSym, !!ySym)
   factorNames <- levels(df[, x][[1]])
 
-  if (verbose == TRUE) {
-    cat("DOUBLE CHECK: Number of categories: ", nFactor, "  ---  ",
-        "Categories: ", as.character(factorNames), "\n")
-    cat("DOUBLE CHECK: dataframe dimension: ", dim(df), "\n")
-  }
-
   # Prepare a result tibble
   result <-
     dplyr::tibble(!!xSym := factorNames) %>%
     dplyr::mutate(
+      Name        = "",
       Count       = 0.0,
       nGood       = 0.0,
       nBad        = 0.0,
@@ -109,6 +103,7 @@ WoETableCategorical <- function(df,
     # Select the data with that factor
     xBand <- df %>% dplyr::filter(!!xSym == factorName)
 
+    result[currentBin, "Name"] <- factorName
     result[currentBin, "nGood"] <- nrow(xBand %>% dplyr::filter(!!ySym == TRUE))
     result[currentBin, "nBad"]  <- nrow(xBand %>% dplyr::filter(!!ySym == FALSE))
   }
