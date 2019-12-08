@@ -13,7 +13,6 @@ Depends:
     tidyverse
 Imports:
     checkmate,
-    tidyverse,
     partykit
 License: GPL (>= 2)
 LazyData: false

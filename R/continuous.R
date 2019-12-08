@@ -192,7 +192,9 @@ WoETableContinuous <-
       dplyr::select(!!xSym, !!ySym) %>%
       dplyr::filter(is.na(!!xSym) & !is.na(!!ySym))
 
-    cat("Number of missing/NA values: ", nrow(xBand), "\n")
+    if (verbose == TRUE) {
+      cat("Number of missing/NA values: ", nrow(xBand), "\n")
+    }
     if (nrow(xBand) > 0) {
       result <- result %>% add_row(CutNumber = totalBins)
 
